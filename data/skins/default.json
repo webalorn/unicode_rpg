@@ -1,0 +1,30 @@
+{
+	"block" : "#",
+	"cursor" : "█",
+
+	"select_left" : "▶",
+	"select_right" : "◀",
+	"select_block" : "■",
+
+	"border" : {
+		"simple" : "█",
+		"vert": "│",
+		"hor": "─",
+		"all": "┼",
+
+		"up": "│",
+		"down": "│",
+		"left": "─",
+		"right": "─",
+
+		"down_left": "┐",
+		"down_right": "┌",
+		"up_left": "┘",
+		"up_right": "└",
+
+		"down_left_right": "┬",
+		"up_left_right": "┴",
+		"up_down_right": "├",
+		"up_down_left": "┤"
+	}
+}

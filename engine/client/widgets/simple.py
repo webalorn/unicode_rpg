@@ -43,13 +43,17 @@ class BoxW(BaseWidget):
 		self.draw_border()
 
 class SimpleTextW(BoxW):
-	def __init__(self, text, *kargs, align="left", w_break=False, **kwargs):
+	def __init__(self, text, *kargs, align="left", v_align="top", w_break=False,
+				text_format=None, **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.set_text(text)
 		self.align = align
+		self.v_align = v_align
 		self.w_break = w_break
+		self.text_format = text_format
 
 	def set_text(self, text):
+		self.last_real_text = None
 		self.text = list(text) # To allow append / pop
 
 	def get_displayed_text_list(self):
@@ -60,8 +64,12 @@ class SimpleTextW(BoxW):
 
 	def get_broke_text(self, larg):
 		txt = self.get_displayed_text_list()
+		txt_hash = hash("".join(txt))
+		if self.last_real_text != None and self.last_real_text[1] == larg and self.last_real_text[2] == txt_hash:
+			return self.last_real_text[0]
+
 		if self.w_break:
-			return [txt[k:k+self.size[1]] for k in range(0, len(txt), self.size[1])]
+			self.last_real_text = ([txt[k:k+self.size[1]] for k in range(0, len(txt), self.size[1])], larg, txt_hash)
 		else:
 			cuts = [0]
 			for i, v in enumerate(txt):
@@ -84,15 +92,24 @@ class SimpleTextW(BoxW):
 						lines.append(list(word))
 				if i_w_list != len(splited)-1:
 					lines.append([])
-			return lines
+			self.last_real_text = (lines, larg, txt_hash)
+		return self.last_real_text[0]
 
 
 	def draw_before(self):
-		self.clear_grid()
+		super().draw_before()
 		padd = self.get_real_padding()
 		size = self.get_inner_size()
 		if self.size[1] >= 1:
 			lines = self.get_broke_text(size[1])
+
+			if self.v_align == "bottom":
+				lines = lines[-size[0]:]
+				lines = [[]] * (size[0]-len(lines)) + lines
+			elif self.v_align == "center":
+				lines = lines[:size[0]]
+				lines = [[]] * ((size[0] - len(lines))//2) + lines
+
 			for row, l in enumerate(lines):
 				if self.align == "center":
 					l = [' '] * ((size[1] - len(l))//2) + l
@@ -100,6 +117,12 @@ class SimpleTextW(BoxW):
 					l = [' '] * (size[1] - len(l)) + l
 
 				for col, val in enumerate(l):
-					r, c = row+padd[0][0], col + padd[0][1]
+					r, c = row+padd[0][0], col + padd[1][0]
 					if self.in_grid(r, c):
 						self.grid[r][c] = val
+
+				c1, c2 = 0, len(l)
+				while c1 < len(l) and l[c1] == ' ': c1 += 1
+				while c2 > 0 and l[c2-1] == ' ': c2 -= 1
+				format = inherit_union(self.displayed_format, self.text_format)
+				self.format_map.set(((row, c1), (row+1, c2)), format)

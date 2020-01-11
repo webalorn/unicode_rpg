@@ -14,6 +14,7 @@ class KeyVal(Enum):
 
 	BACK = 4
 	ESCAPE = 5
+	REV_TAB = 6
 
 KEY_MAP = {
 	'\x7f' : KeyVal.BACK,
@@ -25,6 +26,7 @@ SPECIAL_KEY_MAP = {
 	'C' : KeyVal.ARROW_RIGHT,
 	'B' : KeyVal.ARROW_DOWN,
 	'D' : KeyVal.ARROW_LEFT,
+	'Z' : KeyVal.REV_TAB,
 }
 
 class Key:

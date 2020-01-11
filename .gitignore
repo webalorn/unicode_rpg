@@ -1,3 +1,5 @@
 *__pycache__*
 private*
 *.log
+dist/*
+build/*

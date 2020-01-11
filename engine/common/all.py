@@ -5,15 +5,17 @@ from enum import Enum
 import platform, os, sys
 
 OS_NAME = platform.system() # In ['Linux', 'Darwin', 'Windows']
-OS_WITH_TERM = ['Linux', 'Darwin']
-WINDOW = None
+OS_WITH_TERM = OS_NAME in ['Linux', 'Darwin']
+
+
+########## Client specific
+
+WINDOW, CLINT_OBJ, CURSOR = None, None, None
+CLIENT_STEPS = 0
 
 def to_skin_char(c):
 	return WINDOW.skin.to_char(c)
 
-########## Steps : one step is added each time the main loop advance
-
-CLIENT_STEPS = 0
 def get_cycle_val(cycle_time, modul=2):
 	return (CLIENT_STEPS // cycle_time) % 2
 
@@ -57,4 +59,13 @@ class Cursor:
 
 ########## Run functions
 
-CURSOR = Cursor()
+
+def init_client_globals(client):
+	global WINDOW, CLINT_OBJ, CURSOR
+	CLINT_OBJ = client
+	WINDOW = client.window
+	CURSOR = Cursor()
+
+def client_make_step():
+	global CLIENT_STEPS
+	CLIENT_STEPS += 1

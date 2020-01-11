@@ -4,11 +4,15 @@ from engine.client.keys import *
 from engine import *
 
 class TextInputW(SimpleTextW):
+	FOCUSABLE = True
+
 	def __init__(self, *kargs, limit="auto", **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.limit = limit
 
 	def keypress(self, key):
+		if not self.focused:
+			return False
 		if key.is_char_allowed():
 			self.text.append(key.key)
 			if self.limit:
@@ -27,7 +31,54 @@ class TextInputW(SimpleTextW):
 
 	def get_displayed_text_list(self):
 		cursor = to_skin_char("cursor")
-		return self.text + [cursor] if get_cycle_val(C.CURSOR_BLINK) else self.text
+		if get_cycle_val(C.CURSOR_BLINK) and self.focused:
+			return self.text + [cursor]
+		return self.text
+
+class ButtonW(SimpleTextW):
+	FOCUSABLE = True
+	SYMBS = "│─╭╮╰╯"
+	SYMBS_FOCUSED = "║═╔╗╚╝"
+
+	def __init__(self, text, *kargs, big=False, border=0, call=None, size=None, **kwargs):
+		best_h = 3 if big else 1
+		if size == None:
+			size = (best_h, len(text)+2)
+		elif type(size) == int:
+			size = (best_h, size)
+
+		kwargs['align'] = 'center'
+		kwargs['v_align'] = 'center'
+		super().__init__(text, *kargs, size=size, **kwargs)
+		self.call = call
+		self.big = big
+
+	def get_real_padding(self):
+		(a, b), (c, d) = super().get_real_padding()
+		if self.big:
+			return ((a+1, b+1), (c+1, d+1))
+		return ((a, b), (c+1, d+1))
+
+	def keypress(self, key):
+		if self.focused and key.check("\n"):
+			if self.call:
+				self.call()
+			return True
+		return False
+
+	def draw_border(self):
+		symbs = self.SYMBS_FOCUSED if self.focused else self.SYMBS
+
+		for row in range(self.size[0]):
+			self.grid[row][0] = symbs[0]
+			self.grid[row][-1] = symbs[0]
+		if self.big:
+			self.grid[0] = [symbs[1]] * self.size[1]
+			self.grid[-1] = [symbs[1]] * self.size[1]
+			self.grid[0][0] = symbs[2]
+			self.grid[0][-1] = symbs[3]
+			self.grid[-1][0] = symbs[4]
+			self.grid[-1][-1] = symbs[5]
 
 ########## Menus
 
@@ -37,23 +88,28 @@ class MenuItem(SimpleTextW):
 		self.call = call
 
 	def compute_dims(self, parent_size):
-		n_char = len(self.text)
 		larg = parent_size[1]
-		n_rows = (n_char+larg-1)//larg
+		n_rows = len(self.get_broke_text(larg))
 		self.resize((n_rows, larg))
 
 		super().compute_dims(parent_size)
+
+	def draw_after(self):
+		super().draw_after()
 
 	def pressed(self):
 		if self.call:
 			self.call()
 
 class MenuVertW(BoxW):
-	def __init__(self, col_size=1, spacing=1, *kargs, **kwargs):
+	FOCUSABLE = True
+
+	def __init__(self, col_size=1, spacing=1, scroll=False, *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.col_size = col_size
 		self.spacing = spacing
 		self.cursor_pos = 0
+		self.scroll = scroll
 
 	def get_real_padding(self):
 		padd = super().get_real_padding()
@@ -71,7 +127,18 @@ class MenuVertW(BoxW):
 			child.pos = (space_top, 0)
 			space_top += self.spacing + child.size[0]
 
+		if self.scroll and self.children:
+			mid = self.get_inner_size()[0] // 2
+			s_child = self.children[self.cursor_pos]
+			pos_mid_selected = s_child.pos[0] + s_child.size[0] // 2
+			delta = mid - pos_mid_selected
+
+			for child in self.children:
+				child.pos = add_coords(child.pos, (delta, 0))
+
 	def keypress(self, key):
+		if not self.focused:
+			return False
 		if key.check("\n"):
 			self.children[self.cursor_pos].pressed()
 		elif key.check(KeyVal.ARROW_UP):
@@ -84,9 +151,10 @@ class MenuVertW(BoxW):
 
 	def draw_after(self):
 		super().draw_after()
-		padd = self.get_real_padding()
-		child = self.children[self.cursor_pos]
+		if self.children and self.focused:
+			padd = self.get_real_padding()
+			child = self.children[self.cursor_pos]
 
-		row = child.pos[0] + padd[0][0] + child.size[0] // 2
-		self.grid[row][padd[1][0]-1] = "select_left"
-		self.grid[row][-padd[1][1]] = "select_right"
+			row = child.pos[0] + padd[0][0] + child.size[0] // 2
+			self.grid[row][padd[1][0]-1] = "select_left"
+			self.grid[row][-padd[1][1]] = "select_right"

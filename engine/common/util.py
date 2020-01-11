@@ -30,6 +30,14 @@ def extract_grid(grid, cut_sides):
 			grid[i] = l[cut_sides[1][0]:len(l)-cut_sides[1][1]]
 	return grid
 
+def inherit_union(parent, child):
+	if child == 'inherit' or child == ('inherit', 'inherit', 'inherit') or child == None:
+		return parent
+	if parent == None:
+		parent = EMPTY_FORMAT
+	return tuple([a if b == 'inherit' else b for a, b in zip(parent, child)])
+
+
 ########################## Coords
 
 def add_coords(*l):
@@ -48,5 +56,10 @@ def enumerate_grid(grid, only_coords=False):
 				yield row, col
 			else:
 				yield (row, col), val
+
+def intersect_rects(rect1, rect2):
+	(_r1, _c1), (_r2, _c2) = rect1
+	(r1, c1), (r2, c2) = rect2
+	return ((max(r1, _r1), max(c1, _c1)), (min(r2, _r2), min(c2, _c2)))
 
 ########################## Text

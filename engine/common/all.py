@@ -11,6 +11,7 @@ OS_WITH_TERM = OS_NAME in ['Linux', 'Darwin']
 ########## Client specific
 
 WINDOW, CLINT_OBJ, CURSOR = None, None, None
+S = None # As C is a shortcut for constants, S is a shortcut for WINDOW.skin
 CLIENT_STEPS = 0
 
 def to_skin_char(c):
@@ -57,14 +58,14 @@ class Cursor:
 	def __del__(self):
 		self.show()
 
-########## Run functions
-
+########## Main functions
 
 def init_client_globals(client):
-	global WINDOW, CLINT_OBJ, CURSOR
+	global WINDOW, CLINT_OBJ, CURSOR, S
 	CLINT_OBJ = client
 	WINDOW = client.window
 	CURSOR = Cursor()
+	S = WINDOW.skin
 
 def client_make_step():
 	global CLIENT_STEPS

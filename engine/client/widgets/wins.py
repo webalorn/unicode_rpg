@@ -1,20 +1,21 @@
 from .simple import *
 from .input import *
-import data.consts as C
 from engine.client.keys import *
 from engine import *
 
 class BaseWinW(BoxW):
-	def __init__(self, *kargs, escape_close=True, border=1, modal=True, pos="center", size=(15, 30), background=0, **kwargs):
-		super().__init__(*kargs, border=border, modal=modal, pos=pos, size=size, background=background, **kwargs)
-		self.escape_close = escape_close
+	def __init__(self, *kargs, closeable=True, border=1, modal=True, pos="center", size=(15, 30),
+				background=0, format=EMPTY_FORMAT, **kwargs):
+		super().__init__(*kargs, border=border, modal=modal, pos=pos, size=size,
+			background=background, format=format, **kwargs)
+		self.closeable = closeable
 
 	def close(self):
 		if self.parent:
 			self.parent.remove(self)
 
 	def keypress(self, key):
-		if self.escape_close and key.check(KeyVal.ESCAPE):
+		if self.closeable and key.check(KeyVal.ESCAPE):
 			self.close()
 		return super().keypress(key)
 

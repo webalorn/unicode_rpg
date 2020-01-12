@@ -1,4 +1,4 @@
-import data.consts as C
+import engine.consts as C
 import json
 
 class Skin:

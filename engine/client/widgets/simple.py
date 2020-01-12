@@ -1,5 +1,4 @@
 from .base import *
-import data.consts as C
 from engine.client.keys import *
 from engine import *
 

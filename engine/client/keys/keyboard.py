@@ -1,6 +1,5 @@
 import termios, fcntl, sys, os, time, select
 from engine import *
-import data.consts as C
 from .keys import *
 
 class Keyboard:

@@ -1,4 +1,4 @@
-import data.consts as C
+import engine.consts as C
 
 def to_tuple(t, n=2):
 	if type(t) == tuple: return t

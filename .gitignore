@@ -3,3 +3,4 @@ private*
 *.log
 dist/*
 build/*
+*.DS_Store

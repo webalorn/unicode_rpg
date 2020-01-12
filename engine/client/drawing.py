@@ -1,4 +1,3 @@
-import data.consts as C
 from engine.common.util import *
 from engine import *
 

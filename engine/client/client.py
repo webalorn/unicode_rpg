@@ -1,6 +1,6 @@
 from engine.client.window import *
 from engine.client.widgets import *
-import data.consts as C
+import engine.consts as C
 from engine import *
 import time
 
@@ -12,12 +12,15 @@ class Client:
 
 	def run_main(self):
 		t1 = time.time()
+		PROFILER.start("main loop")
 		client_make_step()
 		self.window.update()
+		PROFILER.end("main loop")
 		t2 = time.time()
 		
-		# log("Main loop done in : {}s".format(str(time.time()-t2)))
+		# log("Main loop done in : {}ms".format(str(int((t2-t1)*1000))))
 		time.sleep(max(0, C.LOOP_TIME + t1 - t2))
+		# raise ExitException
 
 	def run(self):
 		try:

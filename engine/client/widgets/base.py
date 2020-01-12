@@ -3,7 +3,7 @@ from engine import *
 class BaseWidget:
 	FOCUSABLE = False
 
-	def __init__(self, pos=(0, 0), size=(1, 1), add=[], inv_side=(False, False), modal=False, format='inherit'):
+	def __init__(self, pos=(0, 0), size=(1, 1), add=[], inv_side=(False, False), modal=False, format=None):
 		self.rel_pos = pos # Coords can be : +x , -x, "center"
 		self.pos = tuple([k if type(k) == int else 0 for k in to_tuple(pos)])
 		self.format = format
@@ -27,12 +27,21 @@ class BaseWidget:
 	def clear_grid(self):
 		self.grid = [[None for _ in range(self.size[1])] for _ in range(self.size[0])]
 
-	def draw_before(self):
-		self.clear_grid()
+	def set_display_format(self, format, area=0):
 		if self.parent:
 			self.displayed_format = inherit_union(self.parent.displayed_format, self.format)
-		if self.format != None:
-			self.format_map.set(((0, 0), self.size), self.displayed_format)
+		if format != self.format:
+			self.displayed_format = inherit_union(self.displayed_format, format)
+		if format != None:
+			self.format_map.set(area, self.displayed_format)
+
+	def draw_before(self):
+		self.clear_grid()
+		self.set_display_format(self.format)
+		# if self.parent:
+		# 	self.displayed_format = inherit_union(self.parent.displayed_format, self.format)
+		# if self.format != None:
+		# 	self.format_map.set(0, self.displayed_format)
 
 	def draw_after(self):
 		pass

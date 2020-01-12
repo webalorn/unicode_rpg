@@ -98,6 +98,9 @@ class FormatMapRel:
 			self.format_map = self.format_map.format_map
 
 	def set(self, rect, form):
-		rect = (add_coords(rect[0], self.pos), add_coords(rect[1], self.pos))
-		rect = intersect_rects(rect, self.area)
+		if not rect:
+			rect = self.area
+		else:
+			rect = (add_coords(rect[0], self.pos), add_coords(rect[1], self.pos))
+			rect = intersect_rects(rect, self.area)
 		self.format_map.set(rect, form)

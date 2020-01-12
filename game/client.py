@@ -1,7 +1,6 @@
 from engine.client.window import *
 from engine.client.widgets import *
 from engine.client.client import Client
-import data.consts as C
 import time
 from engine import *
 
@@ -10,11 +9,11 @@ class GameClient(Client):
 		super().__init__()
 
 		def call_button():
-			self.window.add(TextPopupW("Boutton cliqué"))
+			self.window.add(TextPopupW("Bouton cliqué"))
 
 		self.window.add(ButtonW("coucou", size=12, big=True, call=call_button))
 
-		col = self.window.add(VertLayoutW(size=(1., 30), force_width=False, anchor="center"))
+		col = self.window.add(VertLayoutW(size=(1., 30), force_width=False, anchor="center", h_align="center"))
 		# col = self.window.add(HorLayoutW(size=(20, 1.), force_height=False, anchor="right"))
 
 		for _ in range(3):
@@ -31,7 +30,7 @@ class GameClient(Client):
 
 		def g():
 			self.window.add(TextPopupW("Coucou, ça va ?"))
-		form = ("red", None, ["underlined"])
+		form = ("red", None, ["bold"])
 
 		menu = self.window.add(MenuVertW(size=(15, 15), border=1, pos="center", col_size=2, scroll=True, format=form))
 		menu.add(MenuItem("Bonjour. Ceci est un test de GUI avec mon truc un peu mal foutu", call=g, text_format=('yellow', 'inherit', 'inherit')))

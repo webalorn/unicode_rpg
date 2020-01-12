@@ -2,7 +2,7 @@ from engine.storage.skin import Skin
 from engine.client.widgets import BaseWidget
 from engine.client.keys import *
 from .drawing import *
-import data.consts as C
+from engine import *
 import os, sys
 
 class WindowManager(BaseWidget):
@@ -40,26 +40,25 @@ class WindowManager(BaseWidget):
 		draw_borders(self.grid)
 
 	def get_focus_id(self):
-		i_focus = -1
+		i_focus = 0 if self.focusable_list else -1
 		for i, w in enumerate(self.focusable_list):
-			if id(w) == id(self.focused_el):
+			if w.focused:
 				i_focus = i
 		return i_focus
 
 	def set_focus(self, el):
-		if self.focused_el:
-			self.focused_el.focused = False
-		self.focused_el = el
-		if self.focused_el:
-			self.focused_el.focused = True
+		for e in self.focusable_list:
+			e.focused = False
+		el.focused = True
 
 	def focus_element(self):
 		self.focusable_list = []
 		self.explore_focusable(self.focusable_list)
 		self.focusable_list = self.focusable_list[::-1]
 
-		if self.focused_el == None or self.get_focus_id() == -1:
-			self.set_focus(self.focusable_list[0] if self.focusable_list else None)
+		i = self.get_focus_id()
+		if i != -1:
+			self.set_focus(self.focusable_list[i])
 
 	def next_focus(self, steps=1):
 		if self.focusable_list:
@@ -97,23 +96,50 @@ class WindowText(WindowManager):
 		pass
 
 	def print_screen(self):
-		self.compute_dims(None)
+		PROFILER.start("win - 0 - print_screen")
+		PROFILER.start("win - 1 - compute_dims")
+		self.compute_dims(None) # takes 8
+
+		PROFILER.next("win - 1 - compute_dims", "win - 2 - format map, draw")
 		format_map = FormatMap(self.size)
 		self.draw(self.grid, format_map)
 		format_map = format_map.get_final_map()
 
+		PROFILER.next("win - 2 - format map, draw", "win - 3 - clear screen")
 		self.clear_screen()
 		self.screen_cleared = False
 
-		for i_row, row in enumerate(self.grid):
-			for i_col, v in enumerate(row):
-				sys.stdout.write(format_map[i_row][i_col])
-				sys.stdout.write(self.skin.to_char(v))
-			if i_row < self.size[0]-1:
-				sys.stdout.write("\n")
+
+		# takes 30
+		# for i_row, row in enumerate(self.grid):
+		# 	for i_col, v in enumerate(row):
+		# 		sys.stdout.write(format_map[i_row][i_col])
+		# 		sys.stdout.write(self.skin.to_char(v))
+		# 	if i_row < self.size[0]-1:
+		# 		sys.stdout.write("\n")
+
+		PROFILER.next("win - 3 - clear screen", "win - 4 - compute grid chars")
+		self.grid = [[self.skin.to_char(v) for v in l] for l in self.grid]
+
+		PROFILER.next("win - 4 - compute grid chars", "win - 5 - compute grid string")
+		printed_grid_string = "\n".join([
+			"".join([format_map[i_row][i_col] + v for i_col, v in enumerate(row)])
+			for i_row, row in enumerate(self.grid)
+		])
+
+		PROFILER.next("win - 5 - compute grid string", "win - 6 - write grid")
+		sys.stdout.write(printed_grid_string)
 		sys.stdout.write("\r")
+
+		
+		PROFILER.next("win - 5 - compute grid string", "win - 7 - flush grid")
 		sys.stdout.flush()
-		self.clear_grid()
+
+		PROFILER.next("win - 5 - compute grid string", "win - 8 - clear grid")
+
+		self.clear_grid() # takes 0-1
+		PROFILER.end("win - 8 - clear grid")
+		PROFILER.end("win - 0 - print_screen")
 
 	def __del__(self):
 		sys.stdout.write(F_STYLE["reset"])

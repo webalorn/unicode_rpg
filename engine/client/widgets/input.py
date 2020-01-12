@@ -1,5 +1,4 @@
 from .simple import *
-import data.consts as C
 from engine.client.keys import *
 from engine import *
 
@@ -37,8 +36,7 @@ class TextInputW(SimpleTextW):
 
 class ButtonW(SimpleTextW):
 	FOCUSABLE = True
-	SYMBS = "│─╭╮╰╯"
-	SYMBS_FOCUSED = "║═╔╗╚╝"
+	FOCUS_STYLE = C.BUTTON_FOCUSED_BASE_STYLE
 
 	def __init__(self, text, *kargs, big=False, border=0, call=None, size=None, **kwargs):
 		best_h = 3 if big else 1
@@ -66,8 +64,14 @@ class ButtonW(SimpleTextW):
 			return True
 		return False
 
+	def draw_before(self):
+		super().draw_before()
+		if self.focused:
+			self.set_display_format(self.FOCUS_STYLE)
+			# self.format_map.set(0, self.FOCUS_STYLE)
+
 	def draw_border(self):
-		symbs = self.SYMBS_FOCUSED if self.focused else self.SYMBS
+		symbs = C.BUTTON_SYMBS[int(self.focused)]
 
 		for row in range(self.size[0]):
 			self.grid[row][0] = symbs[0]

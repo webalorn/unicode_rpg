@@ -1,6 +1,4 @@
 from engine import *
-import data.consts as C
-
 from enum import Enum
 
 class KeyVal(Enum):

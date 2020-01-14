@@ -34,9 +34,9 @@ F_STYLE = {
 	"hidden" : "\u001b[8m",
 }
 
-if True: # TODO : if 256 color mode ok
-	BACK["black"] = BACK[233]
-	FORE["white"] = FORE[254]
+# if True: # TODO : move to skin
+# 	BACK["black"] = BACK[233]
+# 	FORE["white"] = FORE[254]
 
 
 
@@ -59,7 +59,7 @@ class FormatMap:
 		self.map = [['' for _ in range(self.size[1])] for _ in range(self.size[0])]
 
 	def set(self, rect, form): # Possible optim : manage each line with a list / set
-		if form == None:
+		if form is None:
 			return
 		code = format_to_code(form)
 		(row1, col1), (row2, col2) = rect

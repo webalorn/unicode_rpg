@@ -9,64 +9,49 @@ OS_WITH_TERM = OS_NAME in ['Linux', 'Darwin']
 
 
 ########## Client specific
-
-WINDOW, CLINT_OBJ, CURSOR = None, None, None
-S = None # As C is a shortcut for constants, S is a shortcut for WINDOW.skin
-CLIENT_STEPS = 0
-
-def to_skin_char(c):
-	return WINDOW.skin.to_char(c)
+class G: # G : contain general variables (objet to allow variable to be modified after imports)
+	CLIENT = None
+	WINDOW = None
+	CLIENT_STEPS = 0
 
 def get_cycle_val(cycle_time, modul=2):
-	return (CLIENT_STEPS // cycle_time) % 2
+	return (G.CLIENT_STEPS // cycle_time) % 2
 
-########## Cursor (adapted from https://github.com/GijsTimmers/cursor/blob/master/cursor/cursor.py)
+# I allowed these functions to bypass encapsulation for speed efficiency
+def to_skin_char(code):
+	return G.CLIENT.skin.data["char"].get(code, '?')
 
-if os.name == 'nt':
-	import ctypes
+def get_charset(name):
+	return G.CLIENT.skin.data["charset"].get(name, '?')
 
-	class _CursorInfo(ctypes.Structure):
-		_fields_ = [("size", ctypes.c_int),
-					("visible", ctypes.c_byte)]
+def get_skin_format(name):
+	return G.CLIENT.skin.data["format"].get(name, None)
 
-class Cursor:
-	def hide(self, stream=sys.stdout):
-		if os.name == 'nt':
-			ci = _CursorInfo()
-			handle = ctypes.windll.kernel32.GetStdHandle(-11)
-			ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
-			ci.visible = False
-			ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
-		elif os.name == 'posix':
-			stream.write("\033[?25l")
-			stream.flush()
+########## Setting and cleaning up
 
-	def show(self, stream=sys.stdout):
-		if os.name == 'nt':
-			ci = _CursorInfo()
-			handle = ctypes.windll.kernel32.GetStdHandle(-11)
-			ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
-			ci.visible = True
-			ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
-		elif os.name == 'posix':
-			stream.write("\033[?25h")
-			stream.flush()
-
+class DispelMagic:
+	_INSTANCES = []
 	def __init__(self):
-		self.hide()
+		super().__init__()
+		self._INSTANCES.append(self)
 
-	def __del__(self):
-		self.show()
+	def pleaseCleanUpYourMess(self):
+		pass # I you dont do any mess, why are you here ? Only to not beeing garbage collected ? You fool !
+
+	@classmethod
+	def releaseAll(cls):
+		for inst in cls._INSTANCES:
+			inst.pleaseCleanUpYourMess()
+		print("Cleaned up : ", cls._INSTANCES)
+		cls._INSTANCES.clear()
+
+
 
 ########## Main functions
 
 def init_client_globals(client):
-	global WINDOW, CLINT_OBJ, CURSOR, S
-	CLINT_OBJ = client
-	WINDOW = client.window
-	CURSOR = Cursor()
-	S = WINDOW.skin
+	G.CLIENT = client
+	G.WINDOW = client.window
 
 def client_make_step():
-	global CLIENT_STEPS
-	CLIENT_STEPS += 1
+	G.CLIENT_STEPS += 1

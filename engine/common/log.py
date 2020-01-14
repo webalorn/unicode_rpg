@@ -2,7 +2,7 @@ import engine.consts as C
 from datetime import datetime
 
 # Clear (TODO : only 'cut' file ?)
-for fname in [C.DEBUG_LOG]: # [C.DEBUG_LOG, C.ERR_LOG]:
+for fname in [C.DEBUG_LOG, C.ERR_LOG]: # [C.DEBUG_LOG, C.ERR_LOG]:
 	with open(fname, 'w') as f:
 		f.write('')
 date_time_start_log = datetime.now().strftime("%d/%m/%Y %H:%M:%S")

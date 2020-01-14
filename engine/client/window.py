@@ -1,20 +1,24 @@
-from engine.storage.skin import Skin
 from engine.client.widgets import BaseWidget
-from engine.client.keys import *
+from engine.client.keys.keyboard import *
 from .drawing import *
 from engine import *
 import os, sys
+from operator import add
+from .cursor import CursorTerminal
 
-class WindowManager(BaseWidget):
-	def __init__(self, size=None, skin_name='default'):
+class WindowManager(BaseWidget, DispelMagic):
+	def __init__(self, client, size=None):
 		self.screen_cleared = True
 		super().__init__((0, 0), size or (C.DEF_ROWS, C.DEF_COLS), format=EMPTY_FORMAT)
 
-		self.set_skin(skin_name)
-		self.keyboard = Keyboard()
+		self.client = client
 		self.focused_el = None
 		self.focusable_list = []
 		self.displayed_format = EMPTY_FORMAT
+		self.dims_changed = True
+
+	def get_keyboard_interface(self, input_manager):
+		return Keyboard(input_manager)
 
 	def resize(self, new_size):
 		if new_size == self.size:
@@ -33,11 +37,8 @@ class WindowManager(BaseWidget):
 	def print_screen(self):
 		raise Exception("Not implemented")
 
-	def set_skin(self, skin_name):
-		self.skin = Skin(skin_name)
-
-	def draw_after(self):
-		draw_borders(self.grid)
+	# def draw_after(self): # TODO : enable ? (may be slow)
+	# 	draw_borders(self.grid)
 
 	def get_focus_id(self):
 		i_focus = 0 if self.focusable_list else -1
@@ -67,8 +68,7 @@ class WindowManager(BaseWidget):
 			i = (i + steps % n + n) % n
 			self.set_focus(self.focusable_list[i])
 
-	def detect_keys(self):
-		keys_pressed = self.keyboard.get_keys()
+	def detect_keys(self, keys_pressed):
 		for key in keys_pressed:
 			if key.check("\t"):
 				self.next_focus()
@@ -77,15 +77,18 @@ class WindowManager(BaseWidget):
 			else:
 				self.fire_key(key)
 
-	def update(self):
+	def update(self, keys):
 		self.focus_element()
-		self.detect_keys()
+		self.detect_keys(keys)
 		self.print_screen()
 
 class WindowText(WindowManager):
 	def __init__(self, *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
-		self.keyboard =  KeyboardTerm()
+		self.cursor = CursorTerminal()
+
+	def get_keyboard_interface(self, input_manager):
+		return KeyboardTerm(input_manager)
 
 	def compute_dims(self, _ignored_):
 		s = tuple(map(int, os.popen('stty size', 'r').read().split()))
@@ -98,49 +101,41 @@ class WindowText(WindowManager):
 	def print_screen(self):
 		PROFILER.start("win - 0 - print_screen")
 		PROFILER.start("win - 1 - compute_dims")
-		self.compute_dims(None) # takes 8
+		if self.dims_changed:
+			self.compute_dims(None) # takes 8
+			self.dims_changed = False
 
 		PROFILER.next("win - 1 - compute_dims", "win - 2 - format map, draw")
 		format_map = FormatMap(self.size)
-		self.draw(self.grid, format_map)
+		self.draw(format_map)
 		format_map = format_map.get_final_map()
 
-		PROFILER.next("win - 2 - format map, draw", "win - 3 - clear screen")
-		self.clear_screen()
-		self.screen_cleared = False
+		PROFILER.next("win - 2 - format map, draw", "win - 4 - compute grid chars")
 
-
-		# takes 30
-		# for i_row, row in enumerate(self.grid):
-		# 	for i_col, v in enumerate(row):
-		# 		sys.stdout.write(format_map[i_row][i_col])
-		# 		sys.stdout.write(self.skin.to_char(v))
-		# 	if i_row < self.size[0]-1:
-		# 		sys.stdout.write("\n")
-
-		PROFILER.next("win - 3 - clear screen", "win - 4 - compute grid chars")
-		self.grid = [[self.skin.to_char(v) for v in l] for l in self.grid]
+		self.grid = [self.client.skin.list_to_char(l) for l in self.grid]
 
 		PROFILER.next("win - 4 - compute grid chars", "win - 5 - compute grid string")
 		printed_grid_string = "\n".join([
-			"".join([format_map[i_row][i_col] + v for i_col, v in enumerate(row)])
+			"".join(map(add, format_map[i_row], row))
 			for i_row, row in enumerate(self.grid)
 		])
 
 		PROFILER.next("win - 5 - compute grid string", "win - 6 - write grid")
-		sys.stdout.write(printed_grid_string)
-		sys.stdout.write("\r")
+		with self.client.keyboard.io_lock:
+			self.clear_screen()
+			self.screen_cleared = False
 
+			sys.stdout.write(printed_grid_string)
+			sys.stdout.write("\r")
+			sys.stdout.flush()
 		
-		PROFILER.next("win - 5 - compute grid string", "win - 7 - flush grid")
-		sys.stdout.flush()
-
-		PROFILER.next("win - 5 - compute grid string", "win - 8 - clear grid")
-
 		self.clear_grid() # takes 0-1
-		PROFILER.end("win - 8 - clear grid")
+		PROFILER.end("win - 7 - clear grid")
 		PROFILER.end("win - 0 - print_screen")
 
-	def __del__(self):
-		sys.stdout.write(F_STYLE["reset"])
-		sys.stdout.flush()
+	def pleaseCleanUpYourMess(self):
+		with self.client.keyboard.io_lock:
+			self.clear_screen()
+			sys.stdout.write(F_STYLE["reset"])
+			sys.stdout.flush()
+			self.cursor.show()

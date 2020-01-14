@@ -1,10 +1,10 @@
 import time
 from engine.common.log import log
-import engine.common.all as A
+from engine.common.all import G, DispelMagic
 
-
-class Profiler():
+class Profiler(DispelMagic):
 	def __init__(self):
+		super().__init__()
 		self.inits = {}
 		self.sums = {}
 
@@ -22,9 +22,9 @@ class Profiler():
 		self.end(old_name)
 		self.start(new_name)
 
-	def __del__(self):
-		print("Time taken by tasks per cycle [average] : ")
+	def pleaseCleanUpYourMess(self):
+		log("Time taken by tasks per cycle [average] : ")
 		for name, t in sorted(list(self.sums.items())):
-			print("    - {} : {}ms".format(name, int(t*1000 / A.CLIENT_STEPS)))
+			log("    - {} : {}ms".format(name, round(t*1000 / G.CLIENT_STEPS, 2)))
 
 PROFILER = Profiler()

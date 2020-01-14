@@ -11,16 +11,12 @@ SIDE_MOVES = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 # Text and input
 ALLOWED_CHARS = " @()?!.,;/|\\[]-+_`'\"<>|"
 
-# Appearance
-BUTTON_SYMBS = ["│─╭╮╰╯", "║═╔╗╚╝"]
-BUTTON_FOCUSED_BASE_STYLE = ('inherit', 'inherit', 'inherit')
-
 # Storage
 DEBUG_LOG = "debug.log"
 ERR_LOG = "error.log"
-SKINS_PATH = {
-	'default' : "data/skins/default.json",
-}
+SKINS_PATH = "data/skins"
+CONFIG_PATH = "data/config"
+
 QUICK_CHARS = { None : ' ', 0 : ' ', 1 : "block", -1 : '', 2 : "border"}
 
 BORDER_CODE = {

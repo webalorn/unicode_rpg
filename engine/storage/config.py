@@ -1,39 +1,50 @@
 import engine.consts as C
 import json, os
+from pathlib import Path
+from engine.common.exceptions import *
+from collections import defaultdict
 
 class ConfigManager:
-	CONFIG_PATH = "."
+	"""
+	Config file format : {"import" : [..], "category_1" : {...}, "category2": {"sub_cat": {...}, ...}}
+	"""
 
-	def __init__(self, file_name='default_config.json'):
-		self.name = name
-		self.set_config_path(file_name)
+	MAIN_PATH = C.CONFIG_PATH
+
+	def __init__(self, file_path='default.json'):
+		self.set_config_path(file_path)
 		self.conf_data = {}
 		self.load_data()
+		self.cfg_id = hash(self.config_path)
 
-	def set_config_path(self, file_name):
-		path1 = self.CONFIG_PATH
-		path2 = file_name
-		if isinstance(path1, list):
-			path1 = os.path.join(path1)
-		if isinstance(path2, list):
-			path2 = os.path.join(path2)
-		self.config_path = os.path.join(path1, path2)
+	def set_config_path(self, file_path):
+		self.config_path = (Path(self.MAIN_PATH) / file_path).resolve()
 
 	def load_data(self): # TODO : manage errors if can't open file
-		with open(C.SKINS_PATH[name], 'r') as conf_file:
-			self.conf_data = json.load(conf_file)
-		self.data = {}
-		self.create_data_dict(self.conf_data)
+		try:
+			with open(str(self.config_path), 'r') as conf_file:
+				self.conf_data = json.load(conf_file)
+		except Exception as e:
+			raise BaseLoadError("Can't open file config file : ", self.config_path, "because : ", str(e))
 
-	def create_data_dict(self, conf_data, ids = []):
+		self.data = defaultdict(lambda : {})
+		if "import" in self.conf_data:
+			for import_path in self.conf_data["import"]:
+				imported_conf = self.__class__(import_path)
+				for category, content in imported_conf.data.items():
+					self.data[category].update(content)
+
+		for category, content in self.conf_data.items():
+			if category != "import":
+				self.create_data_flat_dict(content, [], self.data[category])
+
+	def create_data_flat_dict(self, conf_data, ids, dest):
 		if isinstance(conf_data, dict):
 			for key, val in conf_data.items():
-				self.create_data_dict(val, ids + [key])
+				self.create_data_flat_dict(val, ids + [key], dest)
 		else:
-			key = hash(".".join(ids))
-			self.data[key] = conf_data
+			key = ".".join(ids)
+			dest[key] = conf_data
 
-	def get(self, key):
-		if type(key) != int:
-			key = hash(key)
-		return self.data[key]
+	def get(self, category, key):
+		return self.data.get(category, {}).get(key, None)

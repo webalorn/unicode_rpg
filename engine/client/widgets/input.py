@@ -24,8 +24,6 @@ class TextInputW(SimpleTextW):
 		elif key.check(KeyVal.BACK):
 			if self.text:
 				self.text.pop()
-		else:
-			return False
 		return True
 
 	def get_displayed_text_list(self):
@@ -36,13 +34,16 @@ class TextInputW(SimpleTextW):
 
 class ButtonW(SimpleTextW):
 	FOCUSABLE = True
-	FOCUS_STYLE = C.BUTTON_FOCUSED_BASE_STYLE
+	FORMAT = 'button'
+	FORMAT_FOCUSED = 'button_focused'
+	BORDER = "border"
+	BORDER_FOCUSED = "border"
 
 	def __init__(self, text, *kargs, big=False, border=0, call=None, size=None, **kwargs):
 		best_h = 3 if big else 1
-		if size == None:
+		if size is None:
 			size = (best_h, len(text)+2)
-		elif type(size) == int:
+		elif isinstance(size, (int, float)):
 			size = (best_h, size)
 
 		kwargs['align'] = 'center'
@@ -64,19 +65,13 @@ class ButtonW(SimpleTextW):
 			return True
 		return False
 
-	def draw_before(self):
-		super().draw_before()
-		if self.focused:
-			self.set_display_format(self.FOCUS_STYLE)
-			# self.format_map.set(0, self.FOCUS_STYLE)
-
 	def draw_border(self):
-		symbs = C.BUTTON_SYMBS[int(self.focused)]
+		symbs = get_charset(self.BORDER_FOCUSED or self.BORDER if self.focused else self.BORDER)
 
 		for row in range(self.size[0]):
 			self.grid[row][0] = symbs[0]
 			self.grid[row][-1] = symbs[0]
-		if self.big:
+		if self.big and self.size[0] and self.size[1]:
 			self.grid[0] = [symbs[1]] * self.size[1]
 			self.grid[-1] = [symbs[1]] * self.size[1]
 			self.grid[0][0] = symbs[2]
@@ -122,6 +117,7 @@ class MenuVertW(BoxW):
 	def move_cursor(self, rel):
 		self.cursor_pos += rel
 		self.cursor_pos = min(max(self.cursor_pos, 0), len(self.children)-1)
+		G.WINDOW.dims_changed = True
 
 	def compute_dims(self, parent_size):
 		super().compute_dims(parent_size)
@@ -149,8 +145,6 @@ class MenuVertW(BoxW):
 			self.move_cursor(-1)
 		elif key.check(KeyVal.ARROW_DOWN):
 			self.move_cursor(1)
-		else:
-			return False
 		return True
 
 	def draw_after(self):
@@ -160,5 +154,29 @@ class MenuVertW(BoxW):
 			child = self.children[self.cursor_pos]
 
 			row = child.pos[0] + padd[0][0] + child.size[0] // 2
-			self.grid[row][padd[1][0]-1] = "select_left"
-			self.grid[row][-padd[1][1]] = "select_right"
+			if row < len(self.grid) and self.size[1]:
+				self.grid[row][padd[1][0]-1] = "select_left"
+				self.grid[row][-padd[1][1]] = "select_right"
+
+class BarInputW(BarW):
+	FOCUSABLE = True
+	FORMAT_FOCUSED = "bar_focused"
+
+	def __init__(self, *kargs, step=0.1, **kwargs): 
+		self.step = step
+		super().__init__(*kargs, **kwargs)
+
+	def advance(self, nb_steps):
+		real_step = self.step
+		if self.maxi and abs(real_step) < 1:
+			real_step = real_step * maxi
+		self.set(self.value + real_step * nb_steps)
+
+	def keypress(self, key):
+		if not self.focused:
+			return False
+		if key.check(KeyVal.ARROW_RIGHT):
+			self.advance(1)
+		elif key.check(KeyVal.ARROW_LEFT):
+			self.advance(-1)
+		return True

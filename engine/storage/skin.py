@@ -1,21 +1,30 @@
 import engine.consts as C
 import json
+from .config import ConfigManager
 
-class Skin:
-	def __init__(self, name='default'):
-		self.name = name
-		skin_file = open(C.SKINS_PATH[name], 'r')
-		self.skin_data = json.load(skin_file)
+class SkinManager(ConfigManager):
+	MAIN_PATH = C.SKINS_PATH
 
-	def get_in_data(self, path, data):
-		return data if not path else self.get_in_data(path[1:], data[path[0]])
-
-	def to_char(self, c):
-		if c in C.QUICK_CHARS:
-			c = C.QUICK_CHARS[c]
-		if type(c) == str and len(c) <= 1:
-			return c
-		elif type(c) == str:
-			return self.get_in_data(c.split("."), self.skin_data)
+	def to_char(self, code):
+		if code in C.QUICK_CHARS:
+			code = C.QUICK_CHARS[code]
+		if isinstance(code, str) and len(code) <= 1:
+			return code
+		elif isinstance(code, str):
+			return self.get("char", code) or "?"
 		else:
-			raise Exception("Char code invalid", c)
+			raise Exception("Char code invalid", code)
+
+	def list_to_char(self, l):
+		# return [code if isinstance(code, str) and len(code) == 1 else self.to_char(code) for code in l]
+		return [
+			' ' if code in [None, 0] else
+			code if isinstance(code, str) and len(code) == 1
+			else self.to_char(code)
+		for code in l ]
+
+	def get_charset(self, name):
+		return self.get("charset", name) or "?"
+
+	def get_skin_format(self, name):
+		return self.get("format", name)

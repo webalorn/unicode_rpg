@@ -2,11 +2,16 @@ from engine import *
 
 class BaseWidget:
 	FOCUSABLE = False
+	FORMAT = None
+	FORMAT_FOCUSED = None
 
-	def __init__(self, pos=(0, 0), size=(1, 1), add=[], inv_side=(False, False), modal=False, format=None):
+	def __init__(self, pos=(0, 0), size=(1, 1), add=[], inv_side=(False, False), modal=False,
+				format=None, focused_format=None, **kwargs):
+		super().__init__(**kwargs)
 		self.rel_pos = pos # Coords can be : +x , -x, "center"
-		self.pos = tuple([k if type(k) == int else 0 for k in to_tuple(pos)])
+		self.pos = tuple([k if isinstance(k, int) else 0 for k in to_tuple(pos)])
 		self.format = format
+		self.focused_format = focused_format
 		self.displayed_format = None
 		self.focused = False
 
@@ -35,13 +40,16 @@ class BaseWidget:
 		if format != None:
 			self.format_map.set(area, self.displayed_format)
 
+	def get_format(self):
+		if self.focused:
+			form = self.focused_format or get_skin_format(self.FORMAT_FOCUSED)
+			if form:
+				return form
+		return self.format or get_skin_format(self.FORMAT)
+
 	def draw_before(self):
 		self.clear_grid()
-		self.set_display_format(self.format)
-		# if self.parent:
-		# 	self.displayed_format = inherit_union(self.parent.displayed_format, self.format)
-		# if self.format != None:
-		# 	self.format_map.set(0, self.displayed_format)
+		self.set_display_format(self.get_format())
 
 	def draw_after(self):
 		pass
@@ -54,31 +62,29 @@ class BaseWidget:
 		for x, sub_l, grid_l, inv in zip(to_tuple(self.rel_pos), self.size, grid_size, to_tuple(self.inv_side)):
 			if x in ("center", "c"):
 				x = (grid_l-sub_l)//2
-			elif type(x) == float:
+			elif isinstance(x, float):
 				x = int(grid_l*x - sub_l/2)
-			elif type(x) != int:
+			elif not isinstance(x, int):
 				raise Exception("Invalid coord", x)
 			if inv:
 				x = grid_l - x - sub_l
 			coords.append(x)
 		return tuple(coords)
 
-	def draw(self, main_grid, format_map):
+	def draw(self, format_map):
 		self.format_map = format_map
 		self.draw_before()
 
 		padding = self.get_real_padding()
 		inner_size = self.get_inner_size()
-		sub_grid = extract_grid(self.grid, padding)
 		sub_map = FormatMapRel(format_map, (padding[0][0], padding[1][0]), inner_size)
 
 		for child in self.children:
-			child.draw(sub_grid, FormatMapRel(sub_map, child.pos, child.size))
-		if has_non_nul(padding):
-			paint_on_grid(self.grid, sub_grid, (padding[0][0], padding[1][0]))
+			child.draw(FormatMapRel(sub_map, child.pos, child.size))
+			real_pos = add_coords((padding[0][0], padding[1][0]), child.pos)
+			paint_on_grid(self.grid, child.grid, real_pos)
 
 		self.draw_after()
-		paint_on_grid(main_grid, self.grid, self.pos)
 
 	def in_grid(self, r, c):
 		return 0 <= r < self.size[0] and 0 <= c < self.size[1]
@@ -86,7 +92,7 @@ class BaseWidget:
 	########## Children
 
 	def add(self, widget):
-		if type(widget) == list:
+		if isinstance(widget, list):
 			for w in widget:
 				self.add(w)
 		elif widget:
@@ -95,7 +101,7 @@ class BaseWidget:
 		return widget
 
 	def remove(self, widget):
-		if type(widget) == list:
+		if isinstance(widget, list):
 			for w in widget:
 				self.remove(w)
 		elif widget:
@@ -115,8 +121,9 @@ class BaseWidget:
 	def resize(self, new_size):
 		new_size = to_tuple(new_size)
 		if new_size != self.rel_size:
+			if G.WINDOW: G.WINDOW.dims_changed = True
 			self.rel_size = new_size
-			self.size = tuple([k if type(k) == int else 0 for k in new_size])
+			self.size = tuple([k if isinstance(k, int) else 0 for k in new_size])
 			self.clear_grid()
 
 	def get_inner_size(self):
@@ -127,9 +134,9 @@ class BaseWidget:
 		if self.size != self.rel_size:
 			new_size = []
 			for rel, parent in zip(self.rel_size, parent_size):
-				if type(rel) == int and rel >= 0: new_size.append(rel)
-				elif type(rel) == int: new_size.append(parent + rel) # -5 means 100% - 5 cells
-				elif type(rel) == float: new_size.append(round(parent*rel))
+				if isinstance(rel, int) and rel >= 0: new_size.append(rel)
+				elif isinstance(rel, int): new_size.append(parent + rel) # -5 means 100% - 5 cells
+				elif isinstance(rel, float): new_size.append(round(parent*rel))
 				elif rel in [None, "auto"]: new_size.append(parent)
 				else: raise Error("Unknown dim type", rel)
 			self.size = tuple(new_size)

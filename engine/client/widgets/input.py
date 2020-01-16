@@ -2,17 +2,24 @@ from .simple import *
 from engine.client.keys import *
 from engine import *
 
-class TextInputW(SimpleTextW):
+class TextareaW(SimpleTextW):
 	FOCUSABLE = True
 
-	def __init__(self, *kargs, limit="auto", **kwargs):
-		super().__init__(*kargs, **kwargs)
+	def __init__(self, *kargs, limit=None, strip_lines=False, **kwargs):
+		super().__init__(*kargs, strip_lines=strip_lines, **kwargs)
 		self.limit = limit
+
+	def draw_before(self):
+		self.anchor_down = self.focused
+		super().draw_before()
+
+	def is_char_allowed(self, key):
+		return key.is_char_allowed()
 
 	def keypress(self, key):
 		if not self.focused:
 			return False
-		if key.is_char_allowed():
+		if self.is_char_allowed(key):
 			self.text.append(key.key)
 			if self.limit:
 				l = self.limit
@@ -26,11 +33,42 @@ class TextInputW(SimpleTextW):
 				self.text.pop()
 		return True
 
+	def get_broke_text(self, larg):
+		txt = super().get_broke_text(larg)
+		if self.focused:
+			cursor = to_skin_char("cursor") if get_cycle_val(C.CURSOR_BLINK) else " "
+			if txt and len(txt[-1]) < self.get_inner_size()[1]:
+				txt = txt[:-1] + [txt[-1] + [cursor]]
+			else:
+				txt = txt + [cursor]
+		return txt
+
+
+class TextInputW(TextareaW):
 	def get_displayed_text_list(self):
 		cursor = to_skin_char("cursor")
 		if get_cycle_val(C.CURSOR_BLINK) and self.focused:
 			return self.text + [cursor]
-		return self.text
+		return self.text + [" "] if self.focused else self.text # Space to replace cursor
+
+	def get_broke_text(self, larg):
+		if self.focused:
+			return [self.get_displayed_text_list()[-larg:]]
+		return [self.get_displayed_text_list()[:larg]]
+
+	def is_char_allowed(self, key):
+		return not key.check("\n") and key.is_char_allowed()
+
+class PasswordW(TextInputW):
+	def get_displayed_text_list(self):
+		pass_chars = get_charset("password")
+		n = len(pass_chars)
+		txt = [pass_chars[i%n] for i in range(len(self.text))]
+
+		cursor = to_skin_char("cursor")
+		if get_cycle_val(C.CURSOR_BLINK) and self.focused:
+			return txt + [cursor]
+		return txt + [" "] if self.focused else txt # Space to replace cursor
 
 class ButtonW(SimpleTextW):
 	FOCUSABLE = True
@@ -49,8 +87,9 @@ class ButtonW(SimpleTextW):
 		kwargs['align'] = 'center'
 		kwargs['v_align'] = 'center'
 		super().__init__(text, *kargs, size=size, **kwargs)
-		self.call = call
 		self.big = big
+
+		self.ev_pressed = Event(call)
 
 	def get_real_padding(self):
 		(a, b), (c, d) = super().get_real_padding()
@@ -60,8 +99,7 @@ class ButtonW(SimpleTextW):
 
 	def keypress(self, key):
 		if self.focused and key.check("\n"):
-			if self.call:
-				self.call()
+			self.ev_pressed.fire()
 			return True
 		return False
 
@@ -84,7 +122,7 @@ class ButtonW(SimpleTextW):
 class MenuItem(SimpleTextW):
 	def __init__(self, *kargs, align="center", call=None, **kwargs):
 		super().__init__(*kargs, align=align, **kwargs)
-		self.call = call
+		self.ev_pressed = Event(call)
 
 	def compute_dims(self, parent_size):
 		larg = parent_size[1]
@@ -93,12 +131,8 @@ class MenuItem(SimpleTextW):
 
 		super().compute_dims(parent_size)
 
-	def draw_after(self):
-		super().draw_after()
-
 	def pressed(self):
-		if self.call:
-			self.call()
+		self.ev_pressed.fire()
 
 class MenuVertW(BoxW):
 	FOCUSABLE = True
@@ -158,6 +192,8 @@ class MenuVertW(BoxW):
 				self.grid[row][padd[1][0]-1] = "select_left"
 				self.grid[row][-padd[1][1]] = "select_right"
 
+########## Other
+
 class BarInputW(BarW):
 	FOCUSABLE = True
 	FORMAT_FOCUSED = "bar_focused"
@@ -180,3 +216,62 @@ class BarInputW(BarW):
 		elif key.check(KeyVal.ARROW_LEFT):
 			self.advance(-1)
 		return True
+
+class CheckBoxW(BaseWidget):
+	FOCUSABLE = True
+	FORMAT = "checkbox"
+	FORMAT_FOCUSED = "checkbox_focused"
+	CHECKED_CENTER_STYLE = "checkbox_cross"
+	CHARSET = "checkbox"
+
+	def __init__(self, checked=False, *kargs, **kwargs):
+		super().__init__(*kargs, **kwargs)
+		self.checked = checked
+
+	def resize(self, new_size):
+		super().resize((1, 3))
+
+	def draw_before(self):
+		super().draw_before()
+		charset = get_charset(self.CHARSET)
+		center = charset[-1] if self.checked else charset[-2]
+		self.grid = [[charset[0], center, charset[1]]]
+		if self.checked:
+			center_format = get_skin_format(self.CHECKED_CENTER_STYLE)
+			center_format = inherit_union(self.displayed_format, center_format)
+			self.format_map.set_point((0, 1), center_format)
+
+	def press(self):
+		self.checked = not self.checked
+
+	def keypress(self, key):
+		if not self.focused:
+			return False
+		if key.check(["\n", " "]):
+			self.press()
+		return True
+
+class RadioGroupW(BoxW):
+	def reset_checked(self, node=None):
+		if node is None:
+			node = self
+		for child in node.children:
+			if isinstance(child, RadioW):
+				child.checked = False
+			else:
+				self.reset_checked(child)
+
+class RadioW(CheckBoxW):
+	FORMAT = "radio"
+	FORMAT_FOCUSED = "radio_focused"
+	CHARSET = "radio"
+
+	def press(self):
+		parent = self.parent
+		while parent and not isinstance(parent, RadioGroupW):
+			parent = parent.parent
+		if parent:
+			parent.reset_checked()
+		else:
+			log("Radio button without group", err=True)
+		self.checked = True

@@ -4,10 +4,10 @@ from game.client import GameClient
 def main():
 	try:
 		game_client = GameClient()
+		game_client.start()
 	except BaseLoadError as e:
-		print(FORE["red"] + "[ERROR LOADING] " + e.message + DEF_FORMAT)
+		print(COLORS.FORE["red"], "[ERROR LOADING]", e.message, COLORS.F_STYLE["reset"])
 		return
-	game_client.start()
 
 if __name__ == '__main__':
 	main()

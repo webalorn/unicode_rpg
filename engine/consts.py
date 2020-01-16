@@ -9,7 +9,11 @@ DEF_COLS = 20
 SIDE_MOVES = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 
 # Text and input
-ALLOWED_CHARS = " @()?!.,;/|\\[]-+_`'\"<>|"
+ALLOWED_CHARS = {
+	"input" : "\n !\"`'#$%&()*+,-./:;<=>?@[\\]^_{|}~¿",
+	"name" : " .-_",
+	"password" : " !\"`'#$%&()*+,-./:;<=>?@[\\]^_{|}~¿",
+}
 
 # Storage
 DEBUG_LOG = "debug.log"

@@ -20,6 +20,9 @@ class ConfigManager:
 	def set_config_path(self, file_path):
 		self.config_path = (Path(self.MAIN_PATH) / file_path).resolve()
 
+	def import_data(self, import_path):
+		return ConfigManager(import_path).data
+
 	def load_data(self): # TODO : manage errors if can't open file
 		try:
 			with open(str(self.config_path), 'r') as conf_file:
@@ -30,8 +33,7 @@ class ConfigManager:
 		self.data = defaultdict(lambda : {})
 		if "import" in self.conf_data:
 			for import_path in self.conf_data["import"]:
-				imported_conf = self.__class__(import_path)
-				for category, content in imported_conf.data.items():
+				for category, content in self.import_data(import_path).items():
 					self.data[category].update(content)
 
 		for category, content in self.conf_data.items():

@@ -6,8 +6,8 @@ class BaseWidget:
 	FORMAT_FOCUSED = None
 
 	def __init__(self, pos=(0, 0), size=(1, 1), add=[], inv_side=(False, False), modal=False,
-				format=None, focused_format=None, **kwargs):
-		super().__init__(**kwargs)
+				format=None, focused_format=None):
+		super().__init__()
 		self.rel_pos = pos # Coords can be : +x , -x, "center"
 		self.pos = tuple([k if isinstance(k, int) else 0 for k in to_tuple(pos)])
 		self.format = format
@@ -26,6 +26,8 @@ class BaseWidget:
 		self.inv_side = inv_side
 		self.padding = ((0, 0), (0, 0))
 		self.modal = modal # Block keys for other widgets
+
+		self.ev_before_draw = Event()
 
 	########## Draw
 
@@ -73,6 +75,7 @@ class BaseWidget:
 
 	def draw(self, format_map):
 		self.format_map = format_map
+		self.ev_before_draw.fire()
 		self.draw_before()
 
 		padding = self.get_real_padding()
@@ -121,9 +124,10 @@ class BaseWidget:
 	def resize(self, new_size):
 		new_size = to_tuple(new_size)
 		if new_size != self.rel_size:
-			if G.WINDOW: G.WINDOW.dims_changed = True
+			if G.WINDOW:
+				G.WINDOW.dims_changed = True
 			self.rel_size = new_size
-			self.size = tuple([k if isinstance(k, int) else 0 for k in new_size])
+			self.size = tuple([k if isinstance(k, int) and k>0 else 0 for k in new_size])
 			self.clear_grid()
 
 	def get_inner_size(self):
@@ -134,10 +138,10 @@ class BaseWidget:
 		if self.size != self.rel_size:
 			new_size = []
 			for rel, parent in zip(self.rel_size, parent_size):
+				if not rel or rel == "auto": new_size.append(parent)
 				if isinstance(rel, int) and rel >= 0: new_size.append(rel)
 				elif isinstance(rel, int): new_size.append(parent + rel) # -5 means 100% - 5 cells
 				elif isinstance(rel, float): new_size.append(round(parent*rel))
-				elif rel in [None, "auto"]: new_size.append(parent)
 				else: raise Error("Unknown dim type", rel)
 			self.size = tuple(new_size)
 

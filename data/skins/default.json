@@ -30,16 +30,33 @@
 		}
 	},
 	"charset" : {
+		"password" : "*★", 
 		"bar": " ▏▎▍▋▊▉█",
 		"bar_fading": " ░▒▓█",
 		"border": "│─┌┐└┘",
 		"button": "│─╭╮╰╯",
-		"button_focused": "║═╔╗╚╝"
+		"button_focused": "║═╔╗╚╝",
+		"checkbox" : "[] ✔",
+		"radio" : "❬❭ ✘"
 	},
 	"format" : {
 		"button": null,
-		"button_focused" : ["red", null, []],
+		"button_focused" : ["gui_box_focused", null, []],
 		"bar": null,
-		"bar_focused" : ["green", "white", []]
+		"bar_focused" : ["green", "white", []],
+		"checkbox" : null,
+		"checkbox_focused" : ["gui_txt_focused", "gui_back_focused", []],
+		"checkbox_cross" : ["red", "inherit", []],
+		"radio" : "checkbox",
+		"radio_focused" : "checkbox_focused",
+		"radio_cross" : "checkbox_cross",
+		"text_scroll_focused" : ["gui_box_focused", null, ["dim"]]
+	},
+	"colors" : {
+		"back" : 233,
+		"text" : 253,
+		"gui_txt_focused" : "white",
+		"gui_back_focused" : 240,
+		"gui_box_focused" : 87
 	}
 }

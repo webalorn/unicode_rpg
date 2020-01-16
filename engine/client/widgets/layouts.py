@@ -1,4 +1,5 @@
 from .base import *
+from .simple import *
 from engine.client.keys import *
 from engine import *
 
@@ -73,3 +74,38 @@ class HorLayoutW(BaseWidget):
 		if delta:
 			for child in self.children:
 				child.pos = add_coords(child.pos, (0, delta))
+
+########## Scroll
+
+class ScrollTextW(SimpleTextW):
+	FOCUSABLE = True
+	BORDER_FOCUSED_STYLE = "text_scroll_focused"
+
+	def __init__(self, *kargs, **kwargs):
+		super().__init__(*kargs, **kwargs)
+		self.scroll_pos = 0
+
+	def is_char_allowed(self, key):
+		return key.is_char_allowed()
+
+	def scroll(self, delta):
+		self.scroll_pos += delta
+		inner_size = self.get_inner_size()
+
+		n_lines = len(super().get_broke_text(inner_size[1]))
+		in_haut = inner_size[0]
+		self.scroll_pos = min(self.scroll_pos, n_lines-in_haut)
+		self.scroll_pos = max(0, self.scroll_pos)
+
+	def keypress(self, key):
+		if not self.focused:
+			return False
+		if key.check(KeyVal.ARROW_UP):
+			self.scroll(-1)
+		elif key.check(KeyVal.ARROW_DOWN):
+			self.scroll(1)
+		return True
+
+	def get_broke_text(self, larg):
+		txt = super().get_broke_text(larg)
+		return txt[self.scroll_pos:]

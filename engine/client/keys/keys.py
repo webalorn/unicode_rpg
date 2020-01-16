@@ -41,13 +41,18 @@ class Key:
 		return isinstance(self.key, KeyVal)
 
 	def check(self, val):
+		if isinstance(val, (list, tuple)):
+			for k in val:
+				if self.check(k):
+					return True
+			return False
 		return self.key == val
 
 	def check_in_str(self, vals):
 		return isinstance(self.key, str) and self.key in vals
 
-	def is_char_allowed(self):
-		return isinstance(self.key, str) and (self.key.isalnum() or self.key in C.ALLOWED_CHARS)
+	def is_char_allowed(self, category="input"):
+		return isinstance(self.key, str) and (self.key.isalnum() or self.key in C.ALLOWED_CHARS[category])
 
 	# Conversion
 

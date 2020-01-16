@@ -1,6 +1,7 @@
 import engine.consts as C
 import json
 from .config import ConfigManager
+from engine import COLORS
 
 class SkinManager(ConfigManager):
 	MAIN_PATH = C.SKINS_PATH
@@ -16,7 +17,6 @@ class SkinManager(ConfigManager):
 			raise Exception("Char code invalid", code)
 
 	def list_to_char(self, l):
-		# return [code if isinstance(code, str) and len(code) == 1 else self.to_char(code) for code in l]
 		return [
 			' ' if code in [None, 0] else
 			code if isinstance(code, str) and len(code) == 1
@@ -28,3 +28,8 @@ class SkinManager(ConfigManager):
 
 	def get_skin_format(self, name):
 		return self.get("format", name)
+
+	def load_data(self):
+		super().load_data()
+		for name, code in self.data['colors'].items():
+			COLORS.add(name, code)

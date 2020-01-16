@@ -2,7 +2,7 @@ from engine.client.widgets import BaseWidget
 from engine.client.keys.keyboard import *
 from .drawing import *
 from engine import *
-import os, sys
+import os, sys, shutil
 from operator import add
 from .cursor import CursorTerminal
 
@@ -21,18 +21,12 @@ class WindowManager(BaseWidget, DispelMagic):
 		return Keyboard(input_manager)
 
 	def resize(self, new_size):
-		if new_size == self.size:
+		if new_size == self.rel_size:
 			return
+		self.dims_changed = True
 		self.clear_screen() # Clear before resizing
 		super().resize(new_size)
 		self.clear_grid()
-
-	def clear_screen(self):
-		sys.stdout.write("\033[K")
-		if not self.screen_cleared:
-			self.screen_cleared = True
-			for i in range(self.size[0]-1):
-				sys.stdout.write("\033[F") # Up one line [if not on last line]
 
 	def print_screen(self):
 		raise Exception("Not implemented")
@@ -80,6 +74,7 @@ class WindowManager(BaseWidget, DispelMagic):
 	def update(self, keys):
 		self.focus_element()
 		self.detect_keys(keys)
+		self.focus_element()
 		self.print_screen()
 
 class WindowText(WindowManager):
@@ -91,19 +86,31 @@ class WindowText(WindowManager):
 		return KeyboardTerm(input_manager)
 
 	def compute_dims(self, _ignored_):
-		s = tuple(map(int, os.popen('stty size', 'r').read().split()))
-		self.resize(s)
-		super().compute_dims(self.size)
+		cols, rows = shutil.get_terminal_size(fallback=(35, 100))
+		self.resize((rows, cols))
+
+		if self.dims_changed:
+			super().compute_dims(self.size)
+			self.dims_changed = False
 
 	def draw_before(self):
 		pass
 
+	def clear_screen(self, hard=False):
+		sys.stdout.write("\033[K")
+		if not self.screen_cleared:
+			self.screen_cleared = True
+			if hard:
+				sys.stdout.write("\033[K")
+			for i in range(self.size[0]-1):
+				sys.stdout.write("\033[F") # Up one line [if not on last line]
+				if hard:
+					sys.stdout.write("\033[K")
+
 	def print_screen(self):
 		PROFILER.start("win - 0 - print_screen")
 		PROFILER.start("win - 1 - compute_dims")
-		if self.dims_changed:
-			self.compute_dims(None) # takes 8
-			self.dims_changed = False
+		self.compute_dims(None)
 
 		PROFILER.next("win - 1 - compute_dims", "win - 2 - format map, draw")
 		format_map = FormatMap(self.size)
@@ -111,7 +118,6 @@ class WindowText(WindowManager):
 		format_map = format_map.get_final_map()
 
 		PROFILER.next("win - 2 - format map, draw", "win - 4 - compute grid chars")
-
 		self.grid = [self.client.skin.list_to_char(l) for l in self.grid]
 
 		PROFILER.next("win - 4 - compute grid chars", "win - 5 - compute grid string")
@@ -135,7 +141,7 @@ class WindowText(WindowManager):
 
 	def pleaseCleanUpYourMess(self):
 		with self.client.keyboard.io_lock:
-			self.clear_screen()
-			sys.stdout.write(F_STYLE["reset"])
+			sys.stdout.write(COLORS.F_STYLE["reset"])
+			self.clear_screen(True)
 			sys.stdout.flush()
 			self.cursor.show()

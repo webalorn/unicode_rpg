@@ -12,6 +12,7 @@ if os.name == 'nt':
 
 class CursorTerminal:
 	def hide(self, stream=sys.stdout):
+		print("\033[?1049h\033[H")
 		if os.name == 'nt':
 			ci = _CursorInfo()
 			handle = ctypes.windll.kernel32.GetStdHandle(-11)
@@ -23,6 +24,7 @@ class CursorTerminal:
 			stream.flush()
 
 	def show(self, stream=sys.stdout):
+		print("\033[?1049l")
 		if os.name == 'nt':
 			ci = _CursorInfo()
 			handle = ctypes.windll.kernel32.GetStdHandle(-11)

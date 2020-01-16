@@ -1,24 +1,27 @@
 import engine.consts as C
 from datetime import datetime
+from .all import DispelMagic
 
-# Clear (TODO : only 'cut' file ?)
-for fname in [C.DEBUG_LOG, C.ERR_LOG]: # [C.DEBUG_LOG, C.ERR_LOG]:
-	with open(fname, 'w') as f:
-		f.write('')
-date_time_start_log = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-debug_line = "============================== " + str(date_time_start_log)
+class LogManagerFile(DispelMagic):
+	def __init__(self, file_name, tag):
+		super().__init__()
+		self.file = open(file_name, 'w')
+		date_time_start_log = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+		self.debug_line = "============================== " + str(date_time_start_log) + " " + tag + "\n"
+		self.writen = False
 
-ERR_WRITEN = False
+	def write(self, *args):
+		if not self.writen:
+			self.file.write(self.debug_line)
+			self.writen = True
+		self.file.write(*args)
+		self.file.flush()
+
+	def pleaseCleanUpYourMessLate(self):
+		self.file.close()
+
+LOG_FILES = [LogManagerFile(f, tag) for f, tag in zip([C.DEBUG_LOG, C.ERR_LOG], ("[DEBUG]", "[ERROR]"))]
 
 def log(*args, end="\n", sep=" ", err=False):
-	global ERR_WRITEN
-	if err and not ERR_WRITEN:
-		ERR_WRITEN = True
-		log(debug_line, "[ERROR]", err=True)
-	if err:
-		log("[ERROR]", *args, end=end, sep=sep)
-
-	with open(C.DEBUG_LOG if not err else C.ERR_LOG, 'a') as f:
-		f.write(sep.join([str(a) for a in args]) + end)
-
-log(debug_line, "[DEBUG]")
+	f = LOG_FILES[1] if err else LOG_FILES[0]
+	f.write(sep.join([str(a) for a in args]) + end)

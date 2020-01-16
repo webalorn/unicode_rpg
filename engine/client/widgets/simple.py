@@ -1,10 +1,13 @@
 from .base import *
 from engine.client.keys import *
 from engine import *
+import re
 
 class BoxW(BaseWidget):
 	BORDER = "border"
 	BORDER_FOCUSED = "border"
+	BORDER_STYLE = None
+	BORDER_FOCUSED_STYLE = None
 
 	def __init__(self, *kargs, border=0, background=None, **kwargs):
 		self.border = border
@@ -34,18 +37,30 @@ class BoxW(BaseWidget):
 				self.grid[-1-decal][decal] = symbs[4]
 				self.grid[-1-decal][-1-decal] = symbs[5]
 
+			style = (self.BORDER_FOCUSED_STYLE if self.focused else None) or self.BORDER_STYLE
+			if style:
+				style = get_skin_format(style)
+				self.format_map.set(((0, 0), (border, nc)), style)
+				self.format_map.set(((nr-border, 0), (nr, nc)), style)
+				self.format_map.set(((0, 0), (nr, border)), style)
+				self.format_map.set(((0, nc-border), (nr, nc)), style)
+
 	def draw_after(self):
 		self.draw_border()
 
 class SimpleTextW(BoxW):
+	RE_SPACE = re.compile(r'(\S+)')
+
 	def __init__(self, text, *kargs, align="left", v_align="top", w_break=False,
-				text_format=None, **kwargs):
+				text_format=None, strip_lines=True, **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.set_text(text)
 		self.align = align
 		self.v_align = v_align
 		self.w_break = w_break
 		self.text_format = text_format
+		self.anchor_down = False
+		self.strip_lines = strip_lines
 
 	def set_text(self, text):
 		self.last_real_text = None
@@ -64,36 +79,45 @@ class SimpleTextW(BoxW):
 		if self.last_real_text != None and self.last_real_text[1:] == (larg, txt_hash):
 			return self.last_real_text[0]
 
+		real_txt = []
 		if self.w_break:
-			self.last_real_text = ([txt[k:k+self.size[1]] for k in range(0, len(txt), self.size[1])], larg, txt_hash)
+			real_txt = [txt[k:k+larg] for k in range(0, len(txt), larg)]
+			
 		else:
-			splited = [l.split() for l in "".join(txt).splitlines()]
+			splited = [self.RE_SPACE.split(l) for l in "".join(txt).splitlines()]
 
-			lines = []
+			real_txt = []
 			for i_w_list, words in enumerate(splited):
-				if i_w_list:
-					lines.append([])
-				for word in words:
-					if lines and (not lines[-1] or len(lines[-1]) + 1 + len(word) <= larg):
-						if lines[-1]:
-							lines[-1].append(" ")
-						lines[-1].extend(list(word))
-						while len(lines[-1]) > larg:
-							w = lines.append(lines[-1][larg:])
-							lines[-2] = lines[-2][:larg]
+				real_txt.append([])
+				for i_word, word in enumerate(words):
+					if i_word%2:
+						if real_txt and (not real_txt[-1] or len(real_txt[-1]) + len(word) <= larg):
+							real_txt[-1].extend(list(word))
+							while len(real_txt[-1]) > larg:
+								w = real_txt.append(real_txt[-1][larg:])
+								real_txt[-2] = real_txt[-2][:larg]
+						else:
+							real_txt.append(list(word))
 					else:
-						lines.append(list(word))
-			self.last_real_text = (lines, larg, txt_hash)
+						pass
+						for c in word:
+							if not real_txt or len(real_txt[-1]) >= larg:
+								real_txt.append([])
+							real_txt[-1].append(c)
+		if self.strip_lines:
+			real_txt = [list("".join(l).strip()) for l in real_txt]
+		self.last_real_text = (real_txt, larg, txt_hash)
 		PROFILER.end("get_broke_text")
-		return self.last_real_text[0]
-
+		return real_txt
 
 	def draw_before(self):
 		super().draw_before()
 		padd = self.get_real_padding()
 		size = self.get_inner_size()
-		if self.size[1] >= 1:
+		if size[1] >= 1 and size[0] >= 1:
 			lines = self.get_broke_text(size[1])
+			if self.anchor_down:
+				lines = lines[-size[0]:]
 
 			if self.v_align == "bottom":
 				lines = lines[-size[0]:]

@@ -25,7 +25,9 @@ def get_charset(name):
 	return G.CLIENT.skin.data["charset"].get(name, '?')
 
 def get_skin_format(name):
-	return G.CLIENT.skin.data["format"].get(name, None)
+	while isinstance(name, str):
+		name =  G.CLIENT.skin.data["format"].get(name, None)
+	return name
 
 ########## Setting and cleaning up
 
@@ -36,14 +38,21 @@ class DispelMagic:
 		self._INSTANCES.append(self)
 
 	def pleaseCleanUpYourMess(self):
-		pass # I you dont do any mess, why are you here ? Only to not beeing garbage collected ? You fool !
+		pass # I you dont do any mess, why are you here? Only to not beeing garbage collected? You fool!
+
+	def pleaseCleanUpYourMessLate(self):
+		pass # Because we still need to log before
 
 	@classmethod
 	def releaseAll(cls):
 		for inst in cls._INSTANCES:
 			inst.pleaseCleanUpYourMess()
-		print("Cleaned up : ", cls._INSTANCES)
+		for inst in cls._INSTANCES:
+			inst.pleaseCleanUpYourMessLate()
 		cls._INSTANCES.clear()
+
+	def __del__(self):
+		self.__class__.releaseAll()
 
 
 

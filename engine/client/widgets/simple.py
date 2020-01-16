@@ -46,7 +46,8 @@ class BoxW(BaseWidget):
 				self.format_map.set(((0, 0), (nr, border)), style)
 				self.format_map.set(((0, nc-border), (nr, nc)), style)
 
-	def draw_after(self):
+	def draw_widget(self):
+		super().draw_widget()
 		self.draw_border()
 
 class TextW(BoxW):
@@ -111,8 +112,8 @@ class TextW(BoxW):
 		PROFILER.end("get_broke_text")
 		return real_txt
 
-	def draw_before(self):
-		super().draw_before()
+	def draw_widget(self):
+		super().draw_widget()
 		padd = self.get_real_padding()
 		size = self.get_inner_size()
 		if size[1] >= 1 and size[0] >= 1:
@@ -165,8 +166,8 @@ class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + defau
 			return self.value / self.maxi
 		return self.value
 
-	def draw_before(self):
-		super().draw_before()
+	def draw_widget(self):
+		super().draw_widget()
 		bar_chars = get_charset("bar")
 
 		length = self.size[1]
@@ -195,6 +196,7 @@ class ImageW(BaseWidget):
 
 	def load(self, path):
 		path = Path(self.SOURCE_PATH) / path
+		self.img = []
 		try:
 			with open(str(path), "r") as f:
 				img = f.readlines()
@@ -208,8 +210,8 @@ class ImageW(BaseWidget):
 		except OSError as e:
 			log("Could not open/read file {} because {}".format(path, str(e)))
 
-	def draw_before(self):
-		super().draw_before()
+	def draw_widget(self):
+		super().draw_widget()
 		self.grid = [["▄"]*self.size[1] for _ in range(self.size[0])]
 		for i_row, row in enumerate(self.img):
 			for i_col, (back, front) in enumerate(row):

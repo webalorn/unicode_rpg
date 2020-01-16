@@ -55,11 +55,9 @@ class ColorManager:
 			return ""
 		fg, back, styles = form
 		style = styles or []
-		l = []
-		if fg != None:
-			l.append(cls.FORE[fg])
-		if back != None:
-			l.append(cls.BACK[back])
+		l = [cls.F_STYLE["reset"]]
+		l.append(cls.FORE["text"] if fg is None else cls.FORE[fg])
+		l.append(cls.BACK["back"] if back is None else cls.BACK[back])
 		for s in styles:
 			l.append(cls.F_STYLE[s])
 		return "".join(l)
@@ -85,7 +83,8 @@ class ColorManager:
 class FormatMap:
 	def __init__(self, size):
 		self.size = size
-		self.map = [["" for _ in range(self.size[1])] for _ in range(self.size[0])]
+		def_format = COLORS.get_default_format()
+		self.map = [[def_format for _ in range(self.size[1])] for _ in range(self.size[0])]
 
 	def set(self, rect, code): # Possible optim : manage each line with a list / set
 		if code is None:
@@ -103,14 +102,10 @@ class FormatMap:
 			self.map[row][col] = code
 
 	def get_final_map(self):
-		def_format = COLORS.get_default_format()
-
 		real_map = [[] for _ in range(len(self.map))]
 		for i_line, l in enumerate(self.map):
 			for i in range(len(l)-1, -1, -1):
-				if (i == 0 or l[i-1] != l[i]):
-					l[i] = def_format + l[i]
-				else:
+				if i != 0 and l[i-1] == l[i]:
 					l[i] = ""
 			real_map[i_line] = l
 		return real_map

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 # Main, and time
 PROG_NAME = "TEST PROG"
 VERSION = "0.0"

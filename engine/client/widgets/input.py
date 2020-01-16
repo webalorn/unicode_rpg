@@ -9,9 +9,9 @@ class TextareaW(TextW):
 		super().__init__(*kargs, strip_lines=strip_lines, **kwargs)
 		self.limit = limit
 
-	def draw_before(self):
+	def draw_widget(self):
 		self.anchor_down = self.focused
-		super().draw_before()
+		super().draw_widget()
 
 	def is_char_allowed(self, key):
 		return key.is_char_allowed()
@@ -181,8 +181,8 @@ class MenuVertW(BoxW):
 			self.move_cursor(1)
 		return True
 
-	def draw_after(self):
-		super().draw_after()
+	def draw_widget(self):
+		super().draw_widget()
 		if self.children and self.focused:
 			padd = self.get_real_padding()
 			child = self.children[self.cursor_pos]
@@ -231,8 +231,8 @@ class CheckBoxW(BaseWidget):
 	def resize(self, new_size):
 		super().resize((1, 3))
 
-	def draw_before(self):
-		super().draw_before()
+	def draw_widget(self):
+		super().draw_widget()
 		charset = get_charset(self.CHARSET)
 		center = charset[-1] if self.checked else charset[-2]
 		self.grid = [[charset[0], center, charset[1]]]

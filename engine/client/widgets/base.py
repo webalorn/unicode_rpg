@@ -47,12 +47,9 @@ class BaseWidget:
 				return form
 		return self.format or get_skin_format(self.FORMAT)
 
-	def draw_before(self):
+	def draw_widget(self):
 		self.clear_grid()
 		self.set_display_format(self.get_format())
-
-	def draw_after(self):
-		pass
 
 	def get_real_padding(self):
 		return self.padding
@@ -73,7 +70,7 @@ class BaseWidget:
 
 	def draw(self, format_map):
 		self.format_map = format_map
-		self.draw_before()
+		self.draw_widget()
 
 		padding = self.get_real_padding()
 		inner_size = self.get_inner_size()
@@ -83,8 +80,6 @@ class BaseWidget:
 			child.draw(FormatMapRel(sub_map, child.pos, child.size))
 			real_pos = add_coords((padding[0][0], padding[1][0]), child.pos)
 			paint_on_grid(self.grid, child.grid, real_pos)
-
-		self.draw_after()
 
 	def in_grid(self, r, c):
 		return 0 <= r < self.size[0] and 0 <= c < self.size[1]

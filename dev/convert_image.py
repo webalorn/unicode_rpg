@@ -2,12 +2,6 @@ from PIL import Image
 import sys
 import os
 
-if len(sys.argv) < 3:
-	print("Usage : python3 <script_name.py> [original image path] [new image path]")
-	print("Optional arg : background color")
-my_path, img_path, dest_path = sys.argv[:3]
-background = 0 if len(sys.argv) < 4 else sys.argv[3]
-
 color_path = os.path.join(os.path.dirname(__file__), "colors.txt")
 palette = [tuple(map(int, l.split())) for l in open(color_path, "r").readlines()]
 
@@ -39,6 +33,19 @@ def draw_img(img, background=0):
 			print("▄" if down != -1 else " ", end="")
 		print("\u001b[0m")
 
-img = convert(Image.open(img_path))
-open(dest_path, "w").write("\n".join([" ".join([str(col) for col in l]) for l in img]))
-draw_img(img, background=background)
+def make_conversion(img_path, dest_path, show=False, background=0):
+	img = convert(Image.open(img_path))
+	open(dest_path, "w").write("\n".join([" ".join([str(col) for col in l]) for l in img]))
+	if show:
+		draw_img(img, background=background)
+
+def main():
+	if len(sys.argv) < 3:
+		print("Usage : python3 <script_name.py> [original image path] [new image path]")
+		print("Optional arg : background color")
+	my_path, img_path, dest_path = sys.argv[:3]
+	background = 0 if len(sys.argv) < 4 else sys.argv[3]
+	make_conversion(img_path, dest_path, True, background)
+
+if __name__ == '__main__':
+	main()

@@ -33,10 +33,7 @@ class WindowManager(BaseWidget, DispelMagic):
 	def print_screen(self):
 		raise Exception("Not implemented")
 
-	# def draw_after(self): # TODO : enable ? (may be slow)
-	# 	draw_borders(self.grid)
-
-	def draw_before(self):
+	def draw_widget(self):
 		self.ev_draw_begin.fire()
 
 	def get_focus_id(self):
@@ -138,7 +135,7 @@ class WindowText(WindowManager):
 			sys.stdout.flush()
 		
 		self.clear_grid() # takes 0-1
-		PROFILER.end("win - 7 - clear grid")
+		PROFILER.end("win - 6 - write grid")
 		PROFILER.end("win - 0 - print_screen")
 
 	def pleaseCleanUpYourMess(self):

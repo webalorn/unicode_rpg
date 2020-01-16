@@ -16,6 +16,8 @@ class WindowManager(BaseWidget, DispelMagic):
 		self.focusable_list = []
 		self.displayed_format = EMPTY_FORMAT
 		self.dims_changed = True
+		
+		self.ev_draw_begin = Event()
 
 	def get_keyboard_interface(self, input_manager):
 		return Keyboard(input_manager)
@@ -33,6 +35,9 @@ class WindowManager(BaseWidget, DispelMagic):
 
 	# def draw_after(self): # TODO : enable ? (may be slow)
 	# 	draw_borders(self.grid)
+
+	def draw_before(self):
+		self.ev_draw_begin.fire()
 
 	def get_focus_id(self):
 		i_focus = 0 if self.focusable_list else -1
@@ -92,9 +97,6 @@ class WindowText(WindowManager):
 		if self.dims_changed:
 			super().compute_dims(self.size)
 			self.dims_changed = False
-
-	def draw_before(self):
-		pass
 
 	def clear_screen(self, hard=False):
 		sys.stdout.write("\033[K")

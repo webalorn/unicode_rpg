@@ -1,6 +1,7 @@
 from .base import *
 from engine.client.keys import *
 from engine import *
+from pathlib import Path
 import re
 
 class BoxW(BaseWidget):
@@ -48,7 +49,7 @@ class BoxW(BaseWidget):
 	def draw_after(self):
 		self.draw_border()
 
-class SimpleTextW(BoxW):
+class TextW(BoxW):
 	RE_SPACE = re.compile(r'(\S+)')
 
 	def __init__(self, text, *kargs, align="left", v_align="top", w_break=False,
@@ -69,7 +70,7 @@ class SimpleTextW(BoxW):
 	def get_displayed_text_list(self):
 		return self.text
 
-	def get_real_text():
+	def get_real_text(self):
 		return "".join(self.text)
 
 	def get_broke_text(self, larg):
@@ -183,3 +184,37 @@ class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + defau
 			row[:plain_l] = plain_char * plain_l
 			if queue:
 				row[plain_l] = queue
+
+class ImageW(BaseWidget):
+	SOURCE_PATH = C.IMG_PATH
+
+	def __init__(self, path, *kargs, back_color=0, **kwargs):
+		super().__init__(*kargs, **kwargs)
+		self.back_color = back_color
+		self.load(path)
+
+	def load(self, path):
+		path = Path(self.SOURCE_PATH) / path
+		try:
+			with open(str(path), "r") as f:
+				img = f.readlines()
+				img = [[int(col) for col in row.split()] for row in img]
+				if len(img)%2:
+					img.append([-1]*len(img[0]))
+				self.img = [list(zip(r1, r2)) for r1, r2 in zip(img[0::2], img[1::2])]
+
+				nbcols = len(self.img[0]) if self.img else 0
+				self.resize((len(self.img), nbcols))
+		except OSError as e:
+			log("Could not open/read file {} because {}".format(path, str(e)))
+
+	def draw_before(self):
+		super().draw_before()
+		self.grid = [["▄"]*self.size[1] for _ in range(self.size[0])]
+		for i_row, row in enumerate(self.img):
+			for i_col, (back, front) in enumerate(row):
+				if back == -1:
+					back = self.back_color
+				if front == -1:
+					front = self.back_color
+				self.format_map.set_point((i_row, i_col), (front, back, []))

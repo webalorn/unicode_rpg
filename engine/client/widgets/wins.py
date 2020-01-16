@@ -30,7 +30,7 @@ class BiGWinW(BaseWinW):
 class TextPopupW(BaseWinW):
 	def __init__(self, text, *kargs, align="center", v_align="center", text_format=None, **kwargs):
 		super().__init__(*kargs, **kwargs)
-		self.add(SimpleTextW(text, align=align, v_align=v_align, size=(1., 1.)))
+		self.add(TextW(text, align=align, v_align=v_align, size=(1., 1.)))
 
 	def keypress(self, key):
 		if key.check("\n"):

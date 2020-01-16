@@ -27,8 +27,6 @@ class BaseWidget:
 		self.padding = ((0, 0), (0, 0))
 		self.modal = modal # Block keys for other widgets
 
-		self.ev_before_draw = Event()
-
 	########## Draw
 
 	def clear_grid(self):
@@ -75,7 +73,6 @@ class BaseWidget:
 
 	def draw(self, format_map):
 		self.format_map = format_map
-		self.ev_before_draw.fire()
 		self.draw_before()
 
 		padding = self.get_real_padding()

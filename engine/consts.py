@@ -1,4 +1,8 @@
+from pathlib import Path
+
 # Main, and time
+PROG_NAME = "TEST PROG"
+VERSION = "0.0"
 LOOP_TIME = 0.2
 CURSOR_BLINK = 3
 
@@ -20,6 +24,7 @@ DEBUG_LOG = "debug.log"
 ERR_LOG = "error.log"
 SKINS_PATH = "data/skins"
 CONFIG_PATH = "data/config"
+IMG_PATH = "data/img"
 
 QUICK_CHARS = { None : ' ', 0 : ' ', 1 : "block", -1 : '', 2 : "border"}
 

@@ -2,7 +2,7 @@ from .simple import *
 from engine.client.keys import *
 from engine import *
 
-class TextareaW(SimpleTextW):
+class TextareaW(TextW):
 	FOCUSABLE = True
 
 	def __init__(self, *kargs, limit=None, strip_lines=False, **kwargs):
@@ -70,7 +70,7 @@ class PasswordW(TextInputW):
 			return txt + [cursor]
 		return txt + [" "] if self.focused else txt # Space to replace cursor
 
-class ButtonW(SimpleTextW):
+class ButtonW(TextW):
 	FOCUSABLE = True
 	FORMAT = 'button'
 	FORMAT_FOCUSED = 'button_focused'
@@ -119,7 +119,7 @@ class ButtonW(SimpleTextW):
 
 ########## Menus
 
-class MenuItem(SimpleTextW):
+class MenuItem(TextW):
 	def __init__(self, *kargs, align="center", call=None, **kwargs):
 		super().__init__(*kargs, align=align, **kwargs)
 		self.ev_pressed = Event(call)

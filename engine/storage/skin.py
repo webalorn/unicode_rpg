@@ -29,7 +29,6 @@ class SkinManager(ConfigManager):
 	def get_skin_format(self, name):
 		return self.get("format", name)
 
-	def load_data(self):
-		super().load_data()
+	def data_loaded_action(self):
 		for name, code in self.data['colors'].items():
 			COLORS.add(name, code)

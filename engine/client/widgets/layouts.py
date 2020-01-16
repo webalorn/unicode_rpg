@@ -77,7 +77,7 @@ class HorLayoutW(BaseWidget):
 
 ########## Scroll
 
-class ScrollTextW(SimpleTextW):
+class ScrollTextW(TextW):
 	FOCUSABLE = True
 	BORDER_FOCUSED_STYLE = "text_scroll_focused"
 

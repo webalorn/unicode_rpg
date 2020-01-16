@@ -4,6 +4,7 @@ from .log import log
 
 class MagicThread(Thread):
 	KILL_ME_PLEASE = Event()
+	EXTERN_EXIT = Event()
 
 	def __init__(self, *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
@@ -13,9 +14,12 @@ class MagicThread(Thread):
 		try:
 			while not self.KILL_ME_PLEASE.is_set():
 				self.thread_loop()
-		except (ExitException, KeyboardInterrupt) as e:
+		except KeyboardInterrupt as e:
+			self.EXTERN_EXIT.set()
+		except ExitException as e:
 			self.KILL_ME_PLEASE.set()
 		except Exception as e:
+			log("Exception in thread {} :".format(str(self.__class__.__name__)), str(e))
 			self.KILL_ME_PLEASE.set()
 			self.exception = e
 
@@ -26,4 +30,6 @@ class MagicThread(Thread):
 		if join:
 			self.join()
 		if self.exception:
-			raise self.exception
+			e = self.exception
+			self.exception = None
+			raise e

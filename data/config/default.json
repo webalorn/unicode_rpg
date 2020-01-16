@@ -1,5 +1,6 @@
 {
 	"main" : {
-		"skin" : "default.json"
+		"skin" : "default.json",
+		"dev_mode" : false
 	}
 }

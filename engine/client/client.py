@@ -17,6 +17,12 @@ class ClientWorker(MagicThread):
 		PROFILER.start("main loop")
 
 		client_make_step()
+		if self.EXTERN_EXIT.is_set():
+			self.EXTERN_EXIT.clear()
+			if self.client.scene:
+				self.client.scene.ask_exit()
+			else:
+				self.KILL_ME_PLEASE.set()
 		keys = self.client.input_manager.get_keys_gui()
 		self.client.window.update(keys)
 
@@ -38,23 +44,22 @@ class Scene:
 		"""
 		pass
 
-	def on_start_main_loop(self):
-		"""
-			Do you need to make an action before each turn of the main loop ?
-		"""
-		pass
-
 	def stop(self): # 
 		"""
 			Clean your stuff
 		"""
 		self.window.children.clear()
 
-class Client:
-	START_SCENE = None
+	def ask_exit(self):
+		text_exit = "Do you really want to exit {}?".format(C.PROG_NAME)
+		def on_quit_yes():
+			raise ExitException
+		w = self.window.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=on_quit_yes))
+		w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
 
-	def __init__(self):
-		self.load_config()
+class Client:
+	def __init__(self, config_file="user.json"):
+		self.load_config(config_file)
 		self.open_window()
 		init_client_globals(self)
 
@@ -66,10 +71,11 @@ class Client:
 	def open_window(self): # TODO : support other modes
 		self.window = WindowText(self)
 
-	def load_config(self):
+	def load_config(self, config_file):
 		try:
-			self.config = ConfigManager('user.json')
+			self.config = ConfigManager(config_file)
 			self.skin = SkinManager(self.config.get("main", "skin"))
+			self.dev_mode = self.config.get("main", "dev_mode")
 		except BaseLoadError as e:
 			raise e
 		except Exception as e:
@@ -81,21 +87,35 @@ class Client:
 		self.scene = scene_cls(self)
 		self.scene.start()
 
+	def start_first_scene(self):
+		"""
+			Need to be overwriten with self.load_scene(scene_class)
+		"""
+		pass
+
+	def keyboard_interrupt(self):
+		if self.dev_mode:
+			self.worker.KILL_ME_PLEASE.set()
+		else:
+			self.worker.EXTERN_EXIT.set()
+
 	def start(self):
 		"""
 			This function start the main loops and wait.
 			When it returns, everything should have been cleaned
 		"""
 		try:
-			self.load_scene(self.START_SCENE)
+			self.start_first_scene()
 			self.keyboard.start()
 			self.worker.start()
 
 			# Wait until the end of the processes
-			self.worker.end_spell(join=True)
-			self.keyboard.end_spell()
-		except KeyboardInterrupt:
-			self.worker.KILL_ME_PLEASE.set()
-			self.worker.join()
+			while self.worker.is_alive():
+				try:
+					self.worker.end_spell(join=True)
+					self.keyboard.end_spell()
+				except KeyboardInterrupt:
+					self.keyboard_interrupt()
+					
 		finally:
 			DispelMagic.releaseAll()

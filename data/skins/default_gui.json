@@ -59,6 +59,11 @@
 		"gui_txt_focused" : "white",
 		"gui_back_focused" : 240,
 		"gui_box_focused" : 87,
-		"gui_danger" : 160
+		"gui_danger" : 160,
+		"scene" : {
+			"main_menu" : {
+				"color" : 1
+			}
+		}
 	}
 }

@@ -20,7 +20,7 @@ def main():
 		game_client = GameClient(parser.config + ".json")
 		game_client.start()
 	except BaseLoadError as e:
-		print(COLORS.FORE["red"], "[ERROR LOADING]", e.message, COLORS.F_STYLE["reset"])
+		print("\033[31m", "[ERROR LOADING]", e.message, "\033[0m")
 		return
 
 if __name__ == '__main__':

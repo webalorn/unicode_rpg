@@ -54,8 +54,6 @@ class DispelMagic:
 	def __del__(self):
 		self.__class__.releaseAll()
 
-
-
 ########## Main functions
 
 def init_client_globals(client):
@@ -64,3 +62,7 @@ def init_client_globals(client):
 
 def client_make_step():
 	G.CLIENT_STEPS += 1
+
+def mark_dims_changed():
+	if G.WINDOW:
+		G.WINDOW.dims_changed = True

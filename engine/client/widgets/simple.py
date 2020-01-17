@@ -82,7 +82,10 @@ class TextW(BoxW):
 			real_txt = [txt[k:k+larg] for k in range(0, len(txt), larg)]
 			
 		else:
-			splited = [self.RE_SPACE.split(l) for l in "".join(txt).splitlines()]
+			joined_txt = "".join(txt)
+			splited = [self.RE_SPACE.split(l) for l in joined_txt.splitlines()]
+			if joined_txt and joined_txt[-1] == "\n":
+				splited.append("") # Because splitlines ignore the last "\n"
 
 			real_txt = []
 			for i_w_list, words in enumerate(splited):
@@ -124,7 +127,7 @@ class TextW(BoxW):
 				lines = lines[:size[0]]
 				lines = [[]] * ((size[0] - len(lines))//2) + lines
 
-			for row, l in enumerate(lines):
+			for row, l in enumerate(lines[:size[0]]):
 				if self.align == "center":
 					l = [' '] * ((size[1] - len(l))//2) + l
 				elif self.align == "right":
@@ -138,8 +141,10 @@ class TextW(BoxW):
 				c1, c2 = 0, len(l)
 				while c1 < len(l) and l[c1] == ' ': c1 += 1
 				while c2 > 0 and l[c2-1] == ' ': c2 -= 1
+				r = row + padd[0][0]
+				c1, c2 = c1 + padd[1][0], c2 + padd[1][0]
 				format = inherit_union(self.displayed_format, self.text_format)
-				set_area_format(self.format_map, ((row, c1), (row+1, c2)), format)
+				set_area_format(self.format_map, ((r, c1), (r+1, c2)), format)
 
 class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + default skin focused
 	FORMAT = "bar"
@@ -185,7 +190,7 @@ class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + defau
 class ImageW(BaseWidget):
 	SOURCE_PATH = C.IMG_PATH
 
-	def __init__(self, path, *kargs, back_color=0, **kwargs):
+	def __init__(self, path, *kargs, back_color=None, **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.back_color = back_color
 		self.load(path)
@@ -209,10 +214,11 @@ class ImageW(BaseWidget):
 	def draw_widget(self):
 		super().draw_widget()
 		self.grid = [["▄"]*self.size[1] for _ in range(self.size[0])]
+		back_color = 'back' if self.back_color is None else self.back_color
 		for i_row, row in enumerate(self.img):
 			for i_col, (back, front) in enumerate(row):
 				if back == -1:
-					back = self.back_color
+					back = back_color
 				if front == -1:
-					front = self.back_color
+					front = back_color
 				set_point_format(self.format_map, (i_row, i_col), (front, back, []))

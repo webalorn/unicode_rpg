@@ -124,12 +124,12 @@ class MenuItem(TextW):
 		super().__init__(*kargs, align=align, **kwargs)
 		self.ev_pressed = Event(call)
 
-	def compute_dims(self, parent_size, screen_map):
+	def compute_real_size(self, parent_size):
 		larg = parent_size[1]
 		n_rows = len(self.get_broke_text(larg))
 		self.resize((n_rows, larg))
 
-		super().compute_dims(parent_size, screen_map)
+		super().compute_real_size(parent_size)
 
 	def pressed(self):
 		self.ev_pressed.fire()
@@ -137,12 +137,13 @@ class MenuItem(TextW):
 class MenuVertW(BoxW):
 	FOCUSABLE = True
 
-	def __init__(self, col_size=1, spacing=1, scroll=False, *kargs, **kwargs):
+	def __init__(self, col_size=1, spacing=1, scroll=False, v_align="top", *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.col_size = col_size
 		self.spacing = spacing
 		self.cursor_pos = 0
 		self.scroll = scroll
+		self.v_align = v_align
 
 	def get_real_padding(self):
 		padd = super().get_real_padding()
@@ -151,19 +152,31 @@ class MenuVertW(BoxW):
 	def move_cursor(self, rel):
 		self.cursor_pos += rel
 		self.cursor_pos = min(max(self.cursor_pos, 0), len(self.children)-1)
-		G.WINDOW.dims_changed = True
+		mark_dims_changed()
 
 	def compute_children_dims(self):
 		space_top = 0
+		inner_size = self.get_inner_size()
 		for child in self.children:
+			child.compute_real_size(inner_size)
 			child.rel_pos = (space_top, 0)
 			space_top += self.spacing + child.size[0]
+		space_top -= self.spacing
 
 		if self.scroll and self.children:
 			mid = self.get_inner_size()[0] // 2
 			s_child = self.children[self.cursor_pos]
 			pos_mid_selected = s_child.rel_pos[0] + s_child.size[0] // 2
 			delta = mid - pos_mid_selected
+
+			for child in self.children:
+				child.rel_pos = add_coords(child.rel_pos, (delta, 0))
+		elif self.children:
+			delta = 0
+			if self.v_align == "bottom":
+				delta = inner_size[0] - space_top
+			elif self.v_align == "center":
+				delta = (inner_size[0] - space_top)//2
 
 			for child in self.children:
 				child.rel_pos = add_coords(child.rel_pos, (delta, 0))
@@ -186,7 +199,7 @@ class MenuVertW(BoxW):
 			child = self.children[self.cursor_pos]
 
 			row = child.pos[0] + padd[0][0] + child.size[0] // 2
-			if row < len(self.grid) and self.size[1]:
+			if row < len(self.grid) and row >= 0 and self.size[1]:
 				self.grid[row][padd[1][0]-1] = "select_left"
 				self.grid[row][-padd[1][1]] = "select_right"
 
@@ -256,6 +269,7 @@ class RadioGroupW(BoxW):
 		for child in node.children:
 			if isinstance(child, RadioW):
 				child.checked = False
+				child.keep_drawn_grid = False
 			else:
 				self.reset_checked(child)
 

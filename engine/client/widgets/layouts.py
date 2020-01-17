@@ -3,7 +3,11 @@ from .simple import *
 from engine.client.keys import *
 from engine import *
 
-class VertLayoutW(BaseWidget):
+class VirtualLayoutW(BaseWidget):
+	def set_visible_area(self, screen_map):
+		pass
+
+class VertLayoutW(VirtualLayoutW):
 	def __init__(self, *kargs, spacing=0, force_width=False, anchor="top", h_align='left', **kwargs):
 		self.spacing = spacing
 		self.force_width = force_width
@@ -37,7 +41,7 @@ class VertLayoutW(BaseWidget):
 			for child in self.children:
 				child.rel_pos = add_coords(child.rel_pos, (delta, 0))
 
-class HorLayoutW(BaseWidget):
+class HorLayoutW(VirtualLayoutW):
 	def __init__(self, *kargs, spacing=0, force_height=False, anchor="left", v_align='top', **kwargs):
 		self.spacing = spacing
 		self.force_height = force_height

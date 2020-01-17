@@ -19,7 +19,7 @@ class MagicThread(Thread):
 		except ExitException as e:
 			self.KILL_ME_PLEASE.set()
 		except Exception as e:
-			log("Exception in thread {} :".format(str(self.__class__.__name__)), str(e))
+			log("Exception in thread {} :".format(str(self.__class__.__name__)), str(e), err=True)
 			self.KILL_ME_PLEASE.set()
 			self.exception = e
 

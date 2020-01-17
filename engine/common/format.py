@@ -1,5 +1,6 @@
 from .util import *
 from .exceptions import *
+from .log import log
 
 """
 	Format of format codes : (foreground, background, special) OR None
@@ -17,35 +18,35 @@ class ColorManager:
 	NAMES = ["black", "red", "green", "yellow", "blue", "magenta", "cyan"]
 
 	FORE = {
-		**{ k : "\u001b[38;5;{}m".format(k) for k in range(256) }, # 256 colors mode
-		**{ v : "\u001b[{}m".format(i+30) for i, v in enumerate(NAMES) }, # 16 colors mode
-		**{ "light_" + v : "\u001b[{}m".format(i+90) for i, v in enumerate(NAMES) }, # 16 colors mode
+		**{ k : "38;5;{}".format(k) for k in range(256) }, # 256 colors mode
+		**{ v : str(i+30) for i, v in enumerate(NAMES) }, # 16 colors mode
+		**{ "light_" + v : str(i+90) for i, v in enumerate(NAMES) }, # 16 colors mode
 		**{
-			"light_gray" : "\u001b[37m",
-			"white" : "\u001b[97m",
-			"text" : "\u001b[30m",
+			"light_gray" : "37",
+			"white" : "97",
+			"text" : "30",
 		},
 	}
 
 	BACK = {
-		**{ k : "\u001b[48;5;{}m".format(k) for k in range(256) }, # 256 colors mode
-		**{ v : "\u001b[{}m".format(i+40) for i, v in enumerate(NAMES) }, # 16 colors mode
-		**{ "light_" + v : "\u001b[{}m".format(i+100) for i, v in enumerate(NAMES) }, # 16 colors mode
+		**{ k : "48;5;{}".format(k) for k in range(256) }, # 256 colors mode
+		**{ v : str(i+40) for i, v in enumerate(NAMES) }, # 16 colors mode
+		**{ "light_" + v : str(i+100) for i, v in enumerate(NAMES) }, # 16 colors mode
 		**{
-			"light_gray" : "\u001b[47m",
-			"white" : "\u001b[107m",
-			"back" : "\u001b[107m",
+			"light_gray" : "47",
+			"white" : "107",
+			"back" : "107",
 		},
 	}
 
 	F_STYLE = {
-		"reset" : "\u001b[0m",
-		"bold" : "\u001b[1m",
-		"dim" : "\u001b[2m",
-		"underlined" : "\u001b[4m",
-		"blink" : "\u001b[5m",
-		"reversed" : "\u001b[7m",
-		"hidden" : "\u001b[8m",
+		"reset" : "0",
+		"bold" : "1",
+		"dim" : "2",
+		"underlined" : "4",
+		"blink" : "5",
+		"reversed" : "7",
+		"hidden" : "8",
 	}
 
 	@classmethod
@@ -54,30 +55,51 @@ class ColorManager:
 			raise Error("Invalid format code", form)
 			return ""
 		fg, back, styles = form
-		style = styles or []
-		l = [cls.F_STYLE["reset"]]
-		l.append(cls.FORE["text"] if fg is None else cls.FORE[fg])
-		l.append(cls.BACK["back"] if back is None else cls.BACK[back])
-		for s in styles:
-			l.append(cls.F_STYLE[s])
-		return "".join(l)
+		styles = ["reset"] + (sorted(styles) or [])
+
+		# fg = cls.FORE["text"] if fg is None else cls.FORE[fg]
+		# back = cls.BACK["back"] if back is None else cls.BACK[back]
+		fg = None if fg is None else cls.FORE[fg]
+		back = None if back is None else cls.BACK[back]
+		styles = ";".join([cls.F_STYLE[s] for s in styles])
+		return (styles, fg, back)
 
 	@classmethod
 	def get_default_format(cls):
-		return cls.F_STYLE["reset"] + cls.format_to_code(("text", "back", []))
+		return cls.format_to_code(("text", "back", []))
 
 	@classmethod
 	def add(cls, name, code):
 		if isinstance(code, str):
 			code = (cls.FORE.get(code, 'black'), cls.BACK.get(code, 'white'))
 		elif isinstance(code, int):
-			code = ("\u001b[38;5;{}m".format(code), "\u001b[48;5;{}m".format(code))
+			code = ("38;5;{}".format(code), "48;5;{}".format(code))
 		elif isinstance(code, (list, tuple)) and len(code) == 3: # True colors mode
-			code = ("\x1b[38;2;{};{};{}m".format(*code), "\x1b[48;2;{};{};{}m".format(*code))
+			code = ("38;2;{};{};{}".format(*code), "48;2;{};{};{}".format(*code))
 		else:
 			log("Unknown code type", code, err=True)
 			return
 		cls.FORE[name] = code[0]
 		cls.BACK[name] = code[1]
+
+	@classmethod
+	def convert_map(cls, grid):
+		default = COLORS.get_default_format()
+
+		last_format = (None, None, None)
+		for i_row, row in enumerate(grid):
+			for i_col, format in enumerate(row):
+				format = default if format is None else (format[0] or default[0], format[1] or default[1], format[2] or default[2])
+				if format[0] != last_format[0]: # To ensure text and background color are set
+					to_print = ";".join(format)
+				else:
+					r = [] if format[1] == last_format[1] else [format[1]]
+					if format[2] != last_format[2]:
+						r.append(format[2])
+					to_print = ";".join(r)
+				if to_print:
+					to_print = "\033[" + to_print + "m"
+				grid[i_row][i_col] = to_print
+				last_format = format
 
 COLORS = ColorManager

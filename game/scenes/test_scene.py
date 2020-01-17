@@ -25,8 +25,10 @@ class TestScene(Scene):
 		layout_radio.add(RadioW())
 		layout_radio.add(RadioW())
 
-		for _ in range(30):
-			self.window.add(ImageW("shield.cbi", pos=(0, "center")))
+
+		self.window.add(ImageW("shield.cbi", pos=(0, "center")))
+		# for i in range(60):
+		# 	self.window.add(ImageW("shield.cbi", pos=((i//10)*8, (i%10)*16)))
 
 		long_text = "Exercitation qui enim cillum duis labore aliquip amet laboris nostrud dolore dolore exercitation nisi deserunt irure amet labore aute incididunt tempor ad eu in irure aute officia labore laboris consectetur dolor reprehenderit nisi quis ea dolore fugiat ad nisi adipisicing aliqua amet aliquip et ut incididunt dolore irure ut ut qui nisi velit ut non incididunt sed voluptate aliquip proident sunt nisi pariatur anim ex excepteur culpa ex elit sint id in elit elit cillum aute esse amet laboris id officia ut consectetur esse veniam enim pariatur reprehenderit ut excepteur culpa ullamco cillum sit dolor minim dolore mollit ut ea nisi tempor officia et dolore proident sunt et labore veniam sit id enim nostrud duis sit in nulla est ullamco in in ullamco sed amet quis pariatur sed dolore elit reprehenderit minim ut deserunt nulla in magna exercitation aliquip ullamco pariatur aute culpa magna cillum ut duis dolor veniam consequat non et nostrud sunt laborum voluptate laborum do in est do consequat id non aliquip sunt dolore ut in eiusmod excepteur do tempor velit aliqua duis irure dolor mollit duis deserunt anim dolore esse nostrud velit adipisicing qui excepteur incididunt in adipisicing et commodo occaecat anim enim proident dolor eu dolore commodo magna eu dolore eu anim officia consequat veniam."
 
@@ -42,7 +44,6 @@ class TestScene(Scene):
 		))
 
 		col = self.window.add(VertLayoutW(size=(1., 30), force_width=False, anchor="center", h_align="center"))
-		# col = self.window.add(HorLayoutW(size=(20, 1.), force_height=False, anchor="right"))
 
 		for _ in range(3):
 			txt = TextW("Ea nisi reprehenderit sed dolore dolore", size=(4, 16))
@@ -69,10 +70,5 @@ class TestScene(Scene):
 		menu = self.window.add(MenuVertW(size=(15, 15), border=1, pos="center", col_size=2, scroll=True, format=form))
 		menu.add(MenuItem("Ullamco voluptate eiusmod voluptate", call=g, text_format=('yellow', 'inherit', 'inherit')))
 		menu.add(MenuItem("Hello there", call=f))
-		menu.add(MenuItem("test", align="center"))
-		menu.add(MenuItem("test", align="center"))
-		menu.add(MenuItem("test", align="center"))
-		menu.add(MenuItem("test", align="center"))
-		menu.add(MenuItem("test", align="center"))
-		menu.add(MenuItem("test", align="center"))
-		menu.add(MenuItem("test", align="center"))
+		for _ in range(7):
+			menu.add(MenuItem("test", align="center"))

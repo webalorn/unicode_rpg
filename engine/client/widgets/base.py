@@ -1,5 +1,5 @@
 from engine import *
-from .drawing import *
+from engine.client.common.drawing import *
 
 class ScreenMap:
 	def __init__(self, size):
@@ -12,29 +12,25 @@ class ScreenMap:
 			for col in range(col1, col2):
 				self.map[row][col] = widget
 
+	# def _ext_get(tab, pos):
+
 	def get_char_map(self):
-		grid = [[" "]*self.size[1] for _ in range(self.size[0])]
-		for i_row, row in enumerate(self.map):
-			for i_col, widget in enumerate(row):
-				if widget:
-					r, c = minus_coords((i_row, i_col), widget.absolute_pos)
-					grid[i_row][i_col] = widget.grid[r][c]
-		return grid
+		return [
+			[
+				" " if not widget else widget.grid[i_row - widget.absolute_pos[0]][i_col - widget.absolute_pos[1]]
+				for i_col, widget in enumerate(row)
+			]
+			for i_row, row in enumerate(self.map)
+		]
 
 	def get_format_map(self):
-		default = COLORS.get_default_format()
-		grid = [[None]*self.size[1] for _ in range(self.size[0])]
-
-		for i_row, row in enumerate(self.map):
-			for i_col, widget in enumerate(row):
-				if widget:
-					r, c = minus_coords((i_row, i_col), widget.absolute_pos)
-					grid[i_row][i_col] = widget.format_map[r][c]
-		for row in grid:
-			for i_col, col in enumerate(row):
-				if not col:
-					row[i_col] = default
-		return grid
+		return [
+			[
+				None if not widget else widget.format_map[i_row - widget.absolute_pos[0]][i_col - widget.absolute_pos[1]]
+				for i_col, widget in enumerate(row)
+			]
+			for i_row, row in enumerate(self.map)
+		]
 
 class ScreenMapRel:
 	def __init__(self, screen_map, rel_pos, area_size):
@@ -113,11 +109,11 @@ class BaseWidget:
 		return self.format or get_skin_format(self.FORMAT)
 
 	def need_draw(self):
-		return (not self.keep_drawn_grid) or self.focused
+		return (not self.keep_drawn_grid)
 
 	def draw_widget(self):
 		# We will need to draw again after the focus is lost
-		self.keep_drawn_grid = (not self.focused)
+		self.keep_drawn_grid = True
 		self.clear_grid()
 		self.set_display_format(self.get_format())
 
@@ -140,6 +136,8 @@ class BaseWidget:
 
 	def draw(self):
 		if self.need_draw():
+			if G.WINDOW:
+				G.WINDOW.keep_drawn_grid = False
 			self.draw_widget()
 		for child in self.children:
 			child.draw()
@@ -154,6 +152,7 @@ class BaseWidget:
 			for w in widget:
 				self.add(w)
 		elif widget:
+			mark_dims_changed()
 			self.children.append(widget)
 			widget.parent = self
 		return widget
@@ -163,6 +162,7 @@ class BaseWidget:
 			for w in widget:
 				self.remove(w)
 		elif widget:
+			mark_dims_changed()
 			self.children = [w for w in self.children if id(w) != id(widget)]
 		return widget
 
@@ -179,8 +179,7 @@ class BaseWidget:
 	def resize(self, new_size):
 		new_size = to_tuple(new_size)
 		if new_size != self.rel_size:
-			if G.WINDOW:
-				G.WINDOW.dims_changed = True
+			mark_dims_changed()
 			self.rel_size = new_size
 			self.size = tuple([k if isinstance(k, int) and k>0 else 0 for k in new_size])
 
@@ -202,7 +201,7 @@ class BaseWidget:
 	def compute_children_dims(self):
 		pass
 
-	def compute_dims(self, parent_size, parent_screen_map):
+	def compute_real_size(self, parent_size):
 		if self.size != self.rel_size:
 			new_size = []
 			for rel, parent in zip(self.rel_size, parent_size):
@@ -213,6 +212,9 @@ class BaseWidget:
 				else: raise Error("Unknown dim type", rel)
 			self.size = tuple(new_size)
 			self.keep_drawn_grid = False
+
+	def compute_dims(self, parent_size, parent_screen_map):
+		self.compute_real_size(parent_size)
 
 		self.pos = self.get_real_coord(parent_size)
 		padding = self.get_real_padding()

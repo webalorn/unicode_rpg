@@ -50,13 +50,15 @@ class TextW(BoxW):
 	RE_SPACE = re.compile(r'(\S+)')
 
 	def __init__(self, text, *kargs, align="left", v_align="top", w_break=False,
-				text_format=None, strip_lines=True, **kwargs):
-		super().__init__(*kargs, **kwargs)
+				text_format=None, strip_lines=True, size=None, **kwargs):
+		if size is None:
+			size = (1, len(text))
+		super().__init__(*kargs, size=size, **kwargs)
 		self.set_text(text)
 		self.align = align
 		self.v_align = v_align
 		self.w_break = w_break
-		self.text_format = text_format
+		self.text_format = self.parse_format(text_format)
 		self.anchor_down = False
 		self.strip_lines = strip_lines
 

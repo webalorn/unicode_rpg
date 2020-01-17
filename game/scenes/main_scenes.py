@@ -1,33 +1,34 @@
-from engine.client.window import *
 from engine.client.widgets import *
 from engine.client.client import Scene
 from engine import *
-import time
 
-class StartScene(Scene):
+class MainMenuScene(Scene):
+	OPTIONS_IN_WIN = True
+
 	def on_continue(self):
-		self.window.add(ButtonsPopup("The game does not yet exist"))
+		self.root.add(ButtonsPopup("The game does not yet exist"))
 		
 	def on_new_game(self):
-		self.window.add(ButtonsPopup("The game does not yet exist"))
+		self.root.add(ButtonsPopup("The game does not yet exist"))
 		
 	def on_load_game(self):
-		self.window.add(ButtonsPopup("The game does not yet exist"))
+		self.root.add(ButtonsPopup("The game does not yet exist"))
 		
 	def on_options(self):
-		self.window.add(ButtonsPopup("Soon configure your non-game!"))
+		if self.OPTIONS_IN_WIN:
+			option_scene = OptionsPanelScene(self.client, self.root, in_win=True)
+			option_scene.start()
+		else:
+			self.client.load_scene(OptionsPanelScene)
 		
 	def on_about(self):
-		self.window.add(ButtonsPopup("This project is WIP"))
-		
-	def on_quit(self):
-		raise ExitException
+		self.root.add(ButtonsPopup("This project is WIP"))
 
 	def start(self):
-		self.title = self.window.add(ImageW("title.cbi", pos=(0, "center")))
+		self.title = self.root.add(ImageW("title.cbi", pos=(0, "center")))
 
 		form = ("scene.main_menu.color", None, ["bold"])
-		self.menu = self.window.add(MenuVertW(
+		self.menu = self.root.add(MenuVertW(
 			size=(-12, 26), border=0, pos=(12, "center"), col_size=2, format=form, v_align="center"
 		))
 		self.menu.add(MenuItem("CONTINUE", call=self.on_continue))
@@ -35,5 +36,35 @@ class StartScene(Scene):
 		self.menu.add(MenuItem("LOAD GAME", call=self.on_load_game))
 		self.menu.add(MenuItem("OPTIONS", call=self.on_options))
 		self.menu.add(MenuItem("ABOUT", call=self.on_about))
-		self.menu.add(MenuItem("QUIT", call=self.on_quit))
+		self.menu.add(MenuItem("QUIT", call=self.raise_exit))
 		
+
+class OptionsPanelScene(Scene):
+	def __init__(self, *kargs, in_win=False, **kwargs):
+		super().__init__(*kargs, **kwargs)
+		self.in_win = in_win
+
+	def start(self):
+		self.canvas = self.root
+		if self.in_win:
+			self.canvas = self.root.add(BiGWinW())
+			self.canvas.ev_key.on(self.keypress)
+
+		self.canvas.add(TextW("[ESC] to close", text_format="dim_text"))
+		self.canvas.add(TextW("The option page will be here soon", pos="center"))
+
+	def quit_options_panel(self):
+		if self.in_win:
+			self.stop()
+		else:
+			self.client.load_scene(MainMenuScene)
+
+	def stop(self):
+		# Save settings
+		super().stop()
+
+	def keypress(self, key):
+		if key.check(KeyVal.ESCAPE):
+			self.quit_options_panel()
+			return True
+		return False

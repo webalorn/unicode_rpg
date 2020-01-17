@@ -40,6 +40,7 @@
 		"radio" : "❬❭ ✘"
 	},
 	"format" : {
+		"dim_text" : [246, null, []],
 		"button": null,
 		"button_focused" : ["gui_box_focused", null, []],
 		"button_danger_focused" : ["gui_danger", null, []],

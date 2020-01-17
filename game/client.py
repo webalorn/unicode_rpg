@@ -8,4 +8,4 @@ class GameClient(Client):
 		if G.CLIENT.config.get("main", "dev_start_scene"):
 			self.load_scene(TestScene)
 		else:
-			self.load_scene(StartScene)
+			self.load_scene(OptionsPanelScene)

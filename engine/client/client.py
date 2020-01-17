@@ -34,9 +34,15 @@ class ClientWorker(MagicThread):
 			time.sleep(delta)
 
 class Scene:
-	def __init__(self, client):
+	def __init__(self, client, root=None):
+		"""
+			The root must be an widget, or the window for the root scene
+		"""
 		self.client = client
-		self.window = client.window
+		root_parent = client.window if root is None else root
+		self.root = root_parent.add(SceneRootW(self))
+		self.ev_stop = Event()
+		self.root.ev_key.on(self.keypress)
 
 	def start(self):
 		"""
@@ -46,16 +52,29 @@ class Scene:
 
 	def stop(self): # 
 		"""
-			Clean your stuff
+			Clean up your stuff
 		"""
-		self.window.children.clear()
+		self.ev_stop.fire()
+		self.try_stop_subscenes(self.root)
+		self.root.parent.remove(self.root)
+
+	def try_stop_subscenes(self, node):
+		for child in node.children:
+			if isinstance(child, SceneRootW):
+				node.scene.stop()
+			else:
+				self.try_stop_subscenes(child)
+
+	def raise_exit(self):
+		raise ExitException
 
 	def ask_exit(self):
 		text_exit = "Do you really want to exit {}?".format(C.PROG_NAME)
-		def on_quit_yes():
-			raise ExitException
-		w = self.window.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=on_quit_yes))
+		w = self.root.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=self.raise_exit))
 		w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
+
+	def keypress(self, key):
+		return False
 
 class Client:
 	def __init__(self, config_file="user.json"):
@@ -81,10 +100,10 @@ class Client:
 		except Exception as e:
 			raise BaseLoadError("Can't load config because : ", str(e))
 
-	def load_scene(self, scene_cls):
+	def load_scene(self, scene_cls, **scene_args):
 		if self.scene:
 			self.scene.stop()
-		self.scene = scene_cls(self)
+		self.scene = scene_cls(self, **scene_args)
 		self.scene.start()
 
 	def start_first_scene(self):

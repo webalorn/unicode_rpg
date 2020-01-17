@@ -21,7 +21,14 @@ class Event:
 	def clear(self):
 		self.callbacks = []
 
-	def fire(self):
+	def fire(self, *args, **kwargs):
 		for f in self.callbacks:
 			if f:
-				f()
+				f(*args, **kwargs)
+
+class KeyPressEvent(Event):
+	def fire(self, key):
+		for f in self.callbacks:
+			if f and f(key):
+				return True
+		return False

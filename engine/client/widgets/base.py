@@ -68,8 +68,8 @@ class BaseWidget:
 		super().__init__()
 		self.rel_pos = "-" # Coords can be : +x , -x, "center"
 		self.move_to(pos)
-		self.format = format
-		self.focused_format = focused_format
+		self.format = self.parse_format(format)
+		self.focused_format = self.parse_format(focused_format)
 		self.displayed_format = None
 		self.focused = False
 		self.keep_drawn_grid = False
@@ -85,6 +85,12 @@ class BaseWidget:
 		self.inv_side = inv_side
 		self.padding = ((0, 0), (0, 0))
 		self.modal = modal # Block keys for other widgets
+		self.ev_key = KeyPressEvent()
+
+	def parse_format(self, format):
+		if isinstance(format, str) and format != "inherit":
+			return get_skin_format(format)
+		return format
 
 	########## Draw
 
@@ -215,7 +221,6 @@ class BaseWidget:
 
 	def compute_dims(self, parent_size, parent_screen_map):
 		self.compute_real_size(parent_size)
-
 		self.pos = self.get_real_coord(parent_size)
 		padding = self.get_real_padding()
 		inner_size = self.get_inner_size()
@@ -244,6 +249,31 @@ class BaseWidget:
 		for child in self.children[::-1]: # Last child tested first
 			if child.fire_key(key): # The key has been used
 				return True
-		if self.keypress(key) or self.modal:
+		if self.keypress(key) or self.ev_key.fire(key):
 			return True
-		return False
+		return self.modal
+
+class ContainerW(BaseWidget):
+	"""
+		This widget can't be displayed and is only here to contain other widgets in the tree,
+		for organization purposes
+	"""
+	def __init__(self, *args, size=(1., 1.), **kwargs):
+		super().__init__(*args, size=size, **kwargs)
+
+	def clear_grid(self):
+		pass
+
+	def need_draw(self):
+		pass
+
+	def set_visible_area(self, screen_map):
+		pass
+
+class SceneRootW(ContainerW):
+	"""
+		This widget allow the widget to be recognized as the root of a scene.
+	"""
+	def __init__(self, scene, *args, **kwargs):
+		self.scene = scene
+		super().__init__(*args, **kwargs)

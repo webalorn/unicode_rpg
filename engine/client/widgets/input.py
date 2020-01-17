@@ -124,12 +124,12 @@ class MenuItem(TextW):
 		super().__init__(*kargs, align=align, **kwargs)
 		self.ev_pressed = Event(call)
 
-	def compute_dims(self, parent_size):
+	def compute_dims(self, parent_size, screen_map):
 		larg = parent_size[1]
 		n_rows = len(self.get_broke_text(larg))
 		self.resize((n_rows, larg))
 
-		super().compute_dims(parent_size)
+		super().compute_dims(parent_size, screen_map)
 
 	def pressed(self):
 		self.ev_pressed.fire()
@@ -153,22 +153,20 @@ class MenuVertW(BoxW):
 		self.cursor_pos = min(max(self.cursor_pos, 0), len(self.children)-1)
 		G.WINDOW.dims_changed = True
 
-	def compute_dims(self, parent_size):
-		super().compute_dims(parent_size)
-
+	def compute_children_dims(self):
 		space_top = 0
 		for child in self.children:
-			child.pos = (space_top, 0)
+			child.rel_pos = (space_top, 0)
 			space_top += self.spacing + child.size[0]
 
 		if self.scroll and self.children:
 			mid = self.get_inner_size()[0] // 2
 			s_child = self.children[self.cursor_pos]
-			pos_mid_selected = s_child.pos[0] + s_child.size[0] // 2
+			pos_mid_selected = s_child.rel_pos[0] + s_child.size[0] // 2
 			delta = mid - pos_mid_selected
 
 			for child in self.children:
-				child.pos = add_coords(child.pos, (delta, 0))
+				child.rel_pos = add_coords(child.rel_pos, (delta, 0))
 
 	def keypress(self, key):
 		if not self.focused:
@@ -239,7 +237,7 @@ class CheckBoxW(BaseWidget):
 		if self.checked:
 			center_format = get_skin_format(self.CHECKED_CENTER_STYLE)
 			center_format = inherit_union(self.displayed_format, center_format)
-			self.format_map.set_point((0, 1), center_format)
+			set_point_format(self.format_map, (0, 1), center_format)
 
 	def press(self):
 		self.checked = not self.checked

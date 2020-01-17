@@ -10,23 +10,20 @@ class BoxW(BaseWidget):
 	BORDER_STYLE = None
 	BORDER_FOCUSED_STYLE = None
 
-	def __init__(self, *kargs, border=0, background=None, **kwargs):
+	def __init__(self, *kargs, border=0, **kwargs):
 		self.border = border
-		self.background = background
 		super().__init__(*kargs, **kwargs)
 
 	def get_real_padding(self):
 		(a, b), (c, d) = super().get_real_padding()
 		return ((a+self.border, b+self.border), (c+self.border, d+self.border))
 
-	def clear_grid(self):
-		self.grid = [[self.background for _ in range(self.size[1])] for _ in range(self.size[0])]
-
 	def draw_border(self):
 		border = min(self.border, self.size[0], self.size[1])
 		nr, nc = self.size
 		if border:
 			symbs = get_charset(self.BORDER_FOCUSED or self.BORDER if self.focused else self.BORDER)
+			style = (self.BORDER_FOCUSED_STYLE if self.focused else None) or self.BORDER_STYLE
 			for decal in range(min(border, nr, nc)):
 				for row in range(decal, nr-decal):
 					self.grid[row][decal] = symbs[0]
@@ -38,13 +35,12 @@ class BoxW(BaseWidget):
 				self.grid[-1-decal][decal] = symbs[4]
 				self.grid[-1-decal][-1-decal] = symbs[5]
 
-			style = (self.BORDER_FOCUSED_STYLE if self.focused else None) or self.BORDER_STYLE
 			if style:
 				style = get_skin_format(style)
-				self.format_map.set(((0, 0), (border, nc)), style)
-				self.format_map.set(((nr-border, 0), (nr, nc)), style)
-				self.format_map.set(((0, 0), (nr, border)), style)
-				self.format_map.set(((0, nc-border), (nr, nc)), style)
+				set_area_format(self.format_map, ((0, 0), (border, nc)), style)
+				set_area_format(self.format_map, ((nr-border, 0), (nr, nc)), style)
+				set_area_format(self.format_map, ((0, 0), (nr, border)), style)
+				set_area_format(self.format_map, ((0, nc-border), (nr, nc)), style)
 
 	def draw_widget(self):
 		super().draw_widget()
@@ -143,17 +139,17 @@ class TextW(BoxW):
 				while c1 < len(l) and l[c1] == ' ': c1 += 1
 				while c2 > 0 and l[c2-1] == ' ': c2 -= 1
 				format = inherit_union(self.displayed_format, self.text_format)
-				self.format_map.set(((row, c1), (row+1, c2)), format)
+				set_area_format(self.format_map, ((row, c1), (row+1, c2)), format)
 
 class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + default skin focused
 	FORMAT = "bar"
 
-	def __init__(self, start_at=1, *kargs, size=9, background=0, maxi=0, **kwargs):
+	def __init__(self, start_at=1, *kargs, size=9, maxi=0, **kwargs):
 		self.maxi = max(0, maxi) # 0 : percentage [0 -> 1]. Otherwise, between 0 and maxi
 		self.set(start_at)
 		if isinstance(size, (int, float)):
 			size = (1, size)
-		super().__init__(*kargs, size=size, background=background, **kwargs)
+		super().__init__(*kargs, size=size, **kwargs)
 
 	def set(self, value):
 		if self.maxi:
@@ -219,4 +215,4 @@ class ImageW(BaseWidget):
 					back = self.back_color
 				if front == -1:
 					front = self.back_color
-				self.format_map.set_point((i_row, i_col), (front, back, []))
+				set_point_format(self.format_map, (i_row, i_col), (front, back, []))

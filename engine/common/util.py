@@ -21,17 +21,6 @@ def has_non_nul(s):
 		r = bool(s)
 	return r
 
-def paint_on_grid(grid, to_paint, pos):
-	if grid and to_paint:
-		row_min, row_max = max(0, pos[0]), min(len(grid), pos[0]+len(to_paint))
-		col_min, col_max = max(0, pos[1]), min(len(grid[0]), pos[1]+len(to_paint[0]))
-
-		if col_max > col_min:
-			def f(x, y) : return x if y is None else y
-			c1, c2 = col_min-pos[1], col_max-pos[1]
-			for i_row in range(row_min, row_max):
-				grid[i_row][col_min:col_max] = map(f, grid[i_row][col_min:col_max], to_paint[i_row-pos[0]][c1:c2])
-
 def extract_grid(grid, cut_sides):
 	if has_non_nul(cut_sides):
 		grid = grid[cut_sides[0][0]:len(grid)-cut_sides[0][1]]

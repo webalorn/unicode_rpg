@@ -1,6 +1,5 @@
-from engine.client.widgets import BaseWidget
+from engine.client.widgets import *
 from engine.client.keys.keyboard import *
-from .drawing import *
 from engine import *
 import os, sys, shutil
 from operator import add
@@ -26,15 +25,18 @@ class WindowManager(BaseWidget, DispelMagic):
 		if new_size == self.rel_size:
 			return
 		self.dims_changed = True
-		self.clear_screen() # Clear before resizing
+		# with self.keyboard.io_lock:
+			# self.clear_screen() # TODO : Clear before resizing (Needed ?)
 		super().resize(new_size)
-		self.clear_grid()
+
+	def set_visible_area(self, screen_map):
+		pass
 
 	def print_screen(self):
 		raise Exception("Not implemented")
 
-	def draw_widget(self):
-		self.ev_draw_begin.fire()
+	def need_draw(self):
+		return False
 
 	def get_focus_id(self):
 		i_focus = 0 if self.focusable_list else -1
@@ -87,12 +89,13 @@ class WindowText(WindowManager):
 	def get_keyboard_interface(self, input_manager):
 		return KeyboardTerm(input_manager)
 
-	def compute_dims(self, _ignored_):
+	def compute_dims(self, *kargs):
 		cols, rows = shutil.get_terminal_size(fallback=(35, 100))
 		self.resize((rows, cols))
 
 		if self.dims_changed:
-			super().compute_dims(self.size)
+			self.screen_map = ScreenMap(self.size)
+			super().compute_dims(self.size, self.screen_map)
 			self.dims_changed = False
 
 	def clear_screen(self, hard=False):
@@ -109,34 +112,44 @@ class WindowText(WindowManager):
 	def print_screen(self):
 		PROFILER.start("win - 0 - print_screen")
 		PROFILER.start("win - 1 - compute_dims")
-		self.compute_dims(None)
+		self.compute_dims()
 
 		PROFILER.next("win - 1 - compute_dims", "win - 2 - format map, draw")
-		format_map = FormatMap(self.size)
-		self.draw(format_map)
-		format_map = format_map.get_final_map()
+		self.ev_draw_begin.fire()
+		self.draw()
+		char_map = self.screen_map.get_char_map()
+		format_map = self.screen_map.get_format_map()
 
 		PROFILER.next("win - 2 - format map, draw", "win - 4 - compute grid chars")
-		self.grid = [self.client.skin.list_to_char(l) for l in self.grid]
+		char_map = [self.client.skin.list_to_char(l) for l in char_map]
 
 		PROFILER.next("win - 4 - compute grid chars", "win - 5 - compute grid string")
 		printed_grid_string = "\n".join([
 			"".join(map(add, format_map[i_row], row))
-			for i_row, row in enumerate(self.grid)
+			for i_row, row in enumerate(char_map)
 		])
 
-		PROFILER.next("win - 5 - compute grid string", "win - 6 - write grid")
+		PROFILER.next("win - 5 - compute grid string", "win - 6 - write grid.1")
 		with self.client.keyboard.io_lock:
+			PROFILER.next("win - 6 - write grid.1", "win - 6 - write grid.2")
 			self.clear_screen()
 			self.screen_cleared = False
 
+
+			PROFILER.next("win - 6 - write grid.2", "win - 6 - write grid.3")
+
+			log("string length", len(printed_grid_string))
+			log("window size", self.size)
+			log(repr(format_map[1][1]), repr(char_map[1][1]))
+			
 			sys.stdout.write(printed_grid_string)
 			sys.stdout.write("\r")
+			PROFILER.next("win - 6 - write grid.3", "win - 6 - write grid.4")
 			sys.stdout.flush()
 		
-		self.clear_grid() # takes 0-1
-		PROFILER.end("win - 6 - write grid")
+		PROFILER.end("win - 6 - write grid.4")
 		PROFILER.end("win - 0 - print_screen")
+		raise ExitException
 
 	def pleaseCleanUpYourMess(self):
 		with self.client.keyboard.io_lock:

@@ -6,9 +6,9 @@ from engine import *
 
 class BaseWinW(BoxW):
 	def __init__(self, *kargs, closeable=True, border=1, modal=True, pos="center", size=(15, 60),
-				background=0, format=EMPTY_FORMAT, **kwargs):
+				format=EMPTY_FORMAT, **kwargs):
 		super().__init__(*kargs, border=border, modal=modal, pos=pos, size=size,
-			background=background, format=format, **kwargs)
+			format=format, **kwargs)
 		self.closeable = closeable
 
 	def close(self):

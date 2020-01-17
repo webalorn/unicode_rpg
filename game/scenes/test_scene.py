@@ -50,14 +50,14 @@ class TestScene(Scene):
 			col.add(box)
 
 		txt2 = TextInputW("abc de 123 456 789 10", size=(3, 14), border=1, limit=0)
-		box2 = BoxW(add=txt2, size=(6, 18), pos=6, border=1, background=0)
+		box2 = BoxW(add=txt2, size=(6, 18), pos=6, border=1)
 		col.add(box2)
 		password = col.add(PasswordW("Guess me", size=(3, 16), border=1, limit=0))
 		self.window.ev_draw_begin.on(lambda : txt.set_text("-> " + password.get_real_text()))
 
 
 		super_txt = TextW("Super boite", size=(4, 16))
-		self.window.add(BoxW(add=super_txt, size=(6, 24), pos=(12, 5), border=1, background=0))
+		self.window.add(BoxW(add=super_txt, size=(6, 24), pos=(12, 5), border=1))
 
 		def f():
 			raise ExitException("END")

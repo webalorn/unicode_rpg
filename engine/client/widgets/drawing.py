@@ -39,3 +39,31 @@ def draw_borders(grid):
 	PROFILER.end("Draw borders - loop 2")
 	PROFILER.end("Draw borders")
 	return grid
+
+def set_area(grid, area, val):
+	r, c = get_dims(grid)
+	(r0, c0), (r1, c1) = area
+	for i_row in range(max(r0, 0), min(r, r1)):
+		a, b = max(c0, 0), min(c, c1)
+		grid[i_row][a:b] = [val]*(b-a)
+
+def paint_on_grid(grid, to_paint, pos):
+	if grid and to_paint:
+		row_min, row_max = max(0, pos[0]), min(len(grid), pos[0]+len(to_paint))
+		col_min, col_max = max(0, pos[1]), min(len(grid[0]), pos[1]+len(to_paint[0]))
+
+		if col_max > col_min:
+			def f(x, y) : return x if y is None else y
+			c1, c2 = col_min-pos[1], col_max-pos[1]
+			for i_row in range(row_min, row_max):
+				grid[i_row][col_min:col_max] = map(f, grid[i_row][col_min:col_max], to_paint[i_row-pos[0]][c1:c2])
+
+def set_area_format(grid, area, code):
+	if code is not None:
+		set_area(grid, area, COLORS.format_to_code(code))
+
+def set_point_format(grid, point, code):
+	if code is not None:
+		code = COLORS.format_to_code(code)
+		row, col = point
+		grid[row][col] = code

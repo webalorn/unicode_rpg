@@ -116,6 +116,5 @@ class Client:
 					self.keyboard.end_spell()
 				except KeyboardInterrupt:
 					self.keyboard_interrupt()
-					
 		finally:
 			DispelMagic.releaseAll()

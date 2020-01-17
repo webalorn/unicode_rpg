@@ -11,12 +11,10 @@ class VertLayoutW(BaseWidget):
 		self.h_align = h_align
 		super().__init__(*kargs, **kwargs)
 
-	def compute_dims(self, parent_size):
+	def compute_children_dims(self):
 		if self.force_width:
 			for child in self.children:
 				child.resize((child.rel_size[0], 1.))
-
-		super().compute_dims(parent_size)
 
 		space_top = 0
 		for child in self.children:
@@ -25,7 +23,7 @@ class VertLayoutW(BaseWidget):
 				col = self.size[1] - child.size[1]
 			if self.h_align == 'center':
 				col = (self.size[1] - child.size[1])//2
-			child.pos = (space_top, col)
+			child.rel_pos = (space_top, col)
 			space_top += self.spacing + child.size[0]
 		space_top -= self.spacing
 
@@ -37,7 +35,7 @@ class VertLayoutW(BaseWidget):
 
 		if delta:
 			for child in self.children:
-				child.pos = add_coords(child.pos, (delta, 0))
+				child.rel_pos = add_coords(child.rel_pos, (delta, 0))
 
 class HorLayoutW(BaseWidget):
 	def __init__(self, *kargs, spacing=0, force_height=False, anchor="left", v_align='top', **kwargs):
@@ -47,12 +45,10 @@ class HorLayoutW(BaseWidget):
 		self.v_align = v_align
 		super().__init__(*kargs, **kwargs)
 
-	def compute_dims(self, parent_size):
+	def compute_children_dims(self):
 		if self.force_height:
 			for child in self.children:
 				child.resize((1., child.rel_size[1]))
-
-		super().compute_dims(parent_size)
 
 		space_left = 0
 		for child in self.children:
@@ -61,7 +57,7 @@ class HorLayoutW(BaseWidget):
 				row = self.size[0] - child.size[0]
 			if self.v_align == 'center':
 				row = (self.size[0] - child.size[0])//2
-			child.pos = (row, space_left)
+			child.rel_pos = (row, space_left)
 			space_left += self.spacing + child.size[1]
 		space_left -= self.spacing
 
@@ -73,7 +69,7 @@ class HorLayoutW(BaseWidget):
 
 		if delta:
 			for child in self.children:
-				child.pos = add_coords(child.pos, (0, delta))
+				child.rel_pos = add_coords(child.rel_pos, (0, delta))
 
 ########## Scroll
 

@@ -4,6 +4,7 @@ from engine import *
 import os, sys, shutil
 from operator import add
 from .cursor import CursorTerminal
+from .utility_cls import ScreenMap
 
 class WindowManager(BaseWidget, DispelMagic):
 	def __init__(self, client, size=None):
@@ -27,10 +28,10 @@ class WindowManager(BaseWidget, DispelMagic):
 		if new_size == self.rel_size:
 			return
 		self.dims_changed = True
-		# with self.keyboard.io_lock:
+		
 		if self.keyboard:
 			with self.keyboard.io_lock:
-				self.clear_screen(hard=True) # TODO : Clear before resizing (Needed ?)
+				self.clear_screen(hard=True)
 		else:
 			self.clear_screen(hard=True)
 		super().resize(new_size)

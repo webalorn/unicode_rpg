@@ -6,3 +6,4 @@ build/*
 *.DS_Store
 *.pyc
 data/config/dev*
+*user.json

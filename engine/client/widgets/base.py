@@ -1,63 +1,6 @@
 from engine import *
 from engine.client.common.drawing import *
 
-class ScreenMap:
-	def __init__(self, size):
-		self.size = size
-		self.map = [[None]*size[1] for _ in range(self.size[0])]
-
-	def set(self, area, widget):
-		(row1, col1), (row2, col2) = area
-		for row in range(row1, row2):
-			for col in range(col1, col2):
-				self.map[row][col] = widget
-
-	# def _ext_get(tab, pos):
-
-	def get_char_map(self):
-		return [
-			[
-				" " if not widget else widget.grid[i_row - widget.absolute_pos[0]][i_col - widget.absolute_pos[1]]
-				for i_col, widget in enumerate(row)
-			]
-			for i_row, row in enumerate(self.map)
-		]
-
-	def get_format_map(self):
-		return [
-			[
-				None if not widget else widget.format_map[i_row - widget.absolute_pos[0]][i_col - widget.absolute_pos[1]]
-				for i_col, widget in enumerate(row)
-			]
-			for i_row, row in enumerate(self.map)
-		]
-
-class ScreenMapRel:
-	def __init__(self, screen_map, rel_pos, area_size):
-		self.pos = rel_pos
-		self.area = (rel_pos, add_coords(rel_pos, area_size))
-
-		self.screen_map = screen_map
-		while isinstance(self.screen_map, ScreenMapRel):
-			move = self.screen_map.pos
-			
-			self.pos = add_coords(self.pos, move)
-			area = (add_coords(self.area[0], move), add_coords(self.area[1], move))
-			self.area = intersect_rects(
-				(add_coords(self.area[0], move), add_coords(self.area[1], move)),
-				self.screen_map.area
-			)
-
-			self.screen_map = self.screen_map.screen_map
-
-	def set(self, area, widget):
-		if not area:
-			area = self.area
-		else:
-			area = (add_coords(area[0], self.pos), add_coords(area[1], self.pos))
-			area = intersect_rects(area, self.area)
-		self.screen_map.set(area, widget)
-
 class BaseWidget:
 	FOCUSABLE = False
 	FORMAT = None
@@ -220,6 +163,8 @@ class BaseWidget:
 			self.keep_drawn_grid = False
 
 	def compute_dims(self, parent_size, parent_screen_map):
+		import engine.client.utility_cls as u_cls
+		
 		self.compute_real_size(parent_size)
 		self.pos = self.get_real_coord(parent_size)
 		padding = self.get_real_padding()
@@ -230,10 +175,10 @@ class BaseWidget:
 			sup_pad = self.parent.get_real_padding()
 			self.absolute_pos = add_coords(self.parent.absolute_pos, self.pos, (sup_pad[0][0], sup_pad[1][0]))
 
-		screen_map = ScreenMapRel(parent_screen_map, self.pos, self.size)
+		screen_map = u_cls.ScreenMapRel(parent_screen_map, self.pos, self.size)
 		self.set_visible_area(screen_map)
 		
-		sub_map = ScreenMapRel(screen_map, (padding[0][0], padding[1][0]), inner_size)
+		sub_map = u_cls.ScreenMapRel(screen_map, (padding[0][0], padding[1][0]), inner_size)
 
 		self.compute_children_dims()
 

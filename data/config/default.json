@@ -1,6 +1,6 @@
 {
 	"main" : {
-		"skin" : "default.json",
+		"skin" : "user.json",
 		"dev_mode" : false
 	}
 }

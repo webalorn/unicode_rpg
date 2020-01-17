@@ -3,11 +3,11 @@ from engine import *
 
 def draw_borders(grid):
 	PROFILER.start("Draw borders")
-	todo = [[None] * len(grid[0]) for _ in range(len(grid))]
+	to_do = [[None] * len(grid[0]) for _ in range(len(grid))]
 
 	PROFILER.start("Draw borders - loop 1")
-	for row in range(len(todo)):
-		for col in range(len(todo[row])):
+	for row in range(len(to_do)):
+		for col in range(len(to_do[row])):
 			val = grid[row][col]
 			if val == 2:
 				sides = [0, 0, 0, 0]
@@ -16,7 +16,7 @@ def draw_borders(grid):
 					if is_pos_in_grid((r2, c2), grid) and grid[r2][c2] == 2:
 						sides[i_move] = 1
 				code = "".join([str(k) for k in sides])
-				todo[row][col] = "border." + C.BORDER_CODE[code]
+				to_do[row][col] = "border." + C.BORDER_CODE[code]
 			elif isinstance(val, str) and val[:7] == "border.":
 				code = [int(c) for c in C.BORDER_TO_CODE[val[7:]]]
 				for i_move, m in enumerate(C.SIDE_MOVES):
@@ -28,12 +28,12 @@ def draw_borders(grid):
 							code[i_move] = 1
 
 				code = "".join([str(k) for k in code])
-				todo[row][col] = "border." + C.BORDER_CODE[code]
+				to_do[row][col] = "border." + C.BORDER_CODE[code]
 
 	PROFILER.next("Draw borders - loop 1", "Draw borders - loop 2")
-	for row in range(len(todo)):
-		for col in range(len(todo[row])):
-			val = todo[row][col]
+	for row in range(len(to_do)):
+		for col in range(len(to_do[row])):
+			val = to_do[row][col]
 			if val:
 				grid[row][col] = val
 	PROFILER.end("Draw borders - loop 2")

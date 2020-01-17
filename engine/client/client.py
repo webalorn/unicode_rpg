@@ -3,6 +3,7 @@ from engine.storage.config import ConfigManager
 from engine.client.window import *
 from engine.client.widgets import *
 from engine.client.keys.keyboard import *
+from .utility_cls import ScreenMap, ScreenMapRel, Scene
 import engine.consts as C
 from engine import *
 import time
@@ -32,49 +33,6 @@ class ClientWorker(MagicThread):
 		delta = C.LOOP_TIME + t1 - t2
 		if delta > 1e-6:
 			time.sleep(delta)
-
-class Scene:
-	def __init__(self, client, root=None):
-		"""
-			The root must be an widget, or the window for the root scene
-		"""
-		self.client = client
-		root_parent = client.window if root is None else root
-		self.root = root_parent.add(SceneRootW(self))
-		self.ev_stop = Event()
-		self.root.ev_key.on(self.keypress)
-
-	def start(self):
-		"""
-			Create all widgets for the scene
-		"""
-		pass
-
-	def stop(self): # 
-		"""
-			Clean up your stuff
-		"""
-		self.ev_stop.fire()
-		self.try_stop_subscenes(self.root)
-		self.root.parent.remove(self.root)
-
-	def try_stop_subscenes(self, node):
-		for child in node.children:
-			if isinstance(child, SceneRootW):
-				node.scene.stop()
-			else:
-				self.try_stop_subscenes(child)
-
-	def raise_exit(self):
-		raise ExitException
-
-	def ask_exit(self):
-		text_exit = "Do you really want to exit {}?".format(C.PROG_NAME)
-		w = self.root.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=self.raise_exit))
-		w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
-
-	def keypress(self, key):
-		return False
 
 class Client:
 	def __init__(self, config_file="user.json"):

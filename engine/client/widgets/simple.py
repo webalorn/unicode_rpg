@@ -135,7 +135,7 @@ class TextW(BoxW):
 				elif self.align == "right":
 					l = [' '] * (size[1] - len(l)) + l
 
-				for col, val in enumerate(l): # TODO : Optim
+				for col, val in enumerate(l):
 					r, c = row+padd[0][0], col + padd[1][0]
 					if self.in_grid(r, c):
 						self.grid[r][c] = val

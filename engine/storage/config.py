@@ -2,6 +2,7 @@ import engine.consts as C
 import json, os
 from pathlib import Path
 from engine.common.exceptions import *
+from engine.common.log import *
 from collections import defaultdict
 
 class ConfigManager:
@@ -10,8 +11,10 @@ class ConfigManager:
 	"""
 
 	MAIN_PATH = C.CONFIG_PATH
+	DEFAULT_CONFIG = {"import" : ["default.json"]}
 
 	def __init__(self, file_path='default.json', main_config=True):
+		self.main_config = main_config
 		self.set_config_path(file_path)
 		self.conf_data = {}
 		self.load_data()
@@ -25,8 +28,13 @@ class ConfigManager:
 	def import_data(self, import_path):
 		return self.__class__(import_path, main_config=False).data
 
-	def load_data(self): # TODO : manage errors if can't open file
+	def load_data(self):
 		try:
+			if self.main_config and not self.config_path.exists():
+				self.config_path.parent.mkdir(parents=True, exist_ok=True)
+				with open(str(self.config_path), 'w') as conf_file:
+					json.dump(self.DEFAULT_CONFIG, conf_file)
+
 			with open(str(self.config_path), 'r') as conf_file:
 				self.conf_data = json.load(conf_file)
 		except Exception as e:
@@ -55,3 +63,24 @@ class ConfigManager:
 
 	def get(self, category, key):
 		return self.data.get(category, {}).get(key, None)
+
+	def put_int_conf(self, conf_obj, path, value):
+		if len(path) == 0:
+			raise Exception("Empty config key")
+		elif len(path) == 1:
+			conf_obj[path[0]] = value
+		else:
+			self.put_int_conf(conf_obj.setdefault(path[0], {}), path[1:], value)
+
+	def set(self, category, key, value):
+		self.data[category][key] = value
+		self.put_int_conf(self.conf_data, [category] + key.split("."), value)
+		log(self.conf_data)
+
+	def save(self):
+		try:
+			with open(str(self.config_path), 'w') as conf_file:
+				json.dump(self.conf_data, conf_file)
+		except e:
+			log("Can't save config because", e, err=True)
+			raise e

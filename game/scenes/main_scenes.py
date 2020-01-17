@@ -60,7 +60,7 @@ class OptionsPanelScene(Scene):
 			self.client.load_scene(MainMenuScene)
 
 	def stop(self):
-		# Save settings
+		self.client.config.save()
 		super().stop()
 
 	def keypress(self, key):

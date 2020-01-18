@@ -29,6 +29,7 @@ class BaseWidget:
 		self.padding = padding
 		self.modal = modal # Block keys for other widgets
 		self.ev_key_intercept = KeyPressEvent()
+		self.ev_key_discarded = KeyPressEvent()
 		self.ev_key = KeyPressEvent()
 
 	def parse_format(self, format):
@@ -206,11 +207,16 @@ class BaseWidget:
 		if self.ev_key_intercept.fire(key):
 			return True
 		for child in self.children[::-1]: # Last child tested first
-			if child.fire_key(key): # The key has been used
+			key_usage = child.fire_key(key)
+			if key_usage: # The key has been used or discarded
+				if key_usage == -1 and not self.ev_key_discarded.fire(key):
+					return -1
 				return True
 		if self.keypress(key) or self.ev_key.fire(key):
 			return True
-		return self.modal
+		if self.modal: # Discard the key
+			return -1
+		return False
 
 class ContainerW(BaseWidget):
 	"""

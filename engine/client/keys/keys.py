@@ -28,11 +28,11 @@ SPECIAL_KEY_MAP = {
 }
 
 KEYS_MAPABLE = [
-	KeyVal.ARROW_UP, KeyVal.ARROW_RIGHT, KeyVal.ARROW_LEFT, KeyVal.ARROW_LEFT,
+	KeyVal.ARROW_UP, KeyVal.ARROW_RIGHT, KeyVal.ARROW_LEFT, KeyVal.ARROW_DOWN,
 ]
 
 KEYS_SYMB = {
-	"\n" : "↵",
+	"\n" : "ENTER", # "↵",
 	"\t" : "TAB",
 	" " : "SPACE",
 	KeyVal.BACK : "⌫",
@@ -75,7 +75,7 @@ class Key:
 		return isinstance(self.key, str) and (self.key.isalnum() or self.key in C.ALLOWED_CHARS[category])
 
 	def is_key_mapable(self):
-		return self.is_char_allowed("mapable") or (isinstance(self.key, KeyVal) and self in KEYS_MAPABLE)
+		return self.is_char_allowed("mapable") or (isinstance(self.key, KeyVal) and self.key in KEYS_MAPABLE)
 
 	# Conversion
 

@@ -121,7 +121,7 @@ class ButtonW(TextW):
 
 ########## Menus
 
-class MenuItem(TextW):
+class MenuItemW(TextW):
 	def __init__(self, *kargs, align="center", call=None, **kwargs):
 		super().__init__(*kargs, align=align, **kwargs)
 		self.ev_pressed = Event(call)

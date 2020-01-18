@@ -68,7 +68,7 @@ class TestScene(Scene):
 		form = ("red", None, ["bold"])
 
 		menu = self.root.add(MenuVertW(size=(15, 15), border=1, pos="center", col_size=2, scroll=True, format=form))
-		menu.add(MenuItem("Ullamco voluptate eiusmod voluptate", call=g, text_format=('yellow', 'inherit', 'inherit')))
-		menu.add(MenuItem("Hello there", call=f))
+		menu.add(MenuItemW("Ullamco voluptate eiusmod voluptate", call=g, text_format=('yellow', 'inherit', 'inherit')))
+		menu.add(MenuItemW("Hello there", call=f))
 		for _ in range(7):
-			menu.add(MenuItem("test", align="center"))
+			menu.add(MenuItemW("test", align="center"))

@@ -77,6 +77,7 @@ class Scene:
 
 		self.ev_stop = Event()
 		self.root.ev_key_intercept.on(self.keypress_intercept)
+		self.root.ev_key_discarded.on(self.keypress_discarded)
 		self.root.ev_key.on(self.unhandled_keypress)
 
 	def start(self):
@@ -119,4 +120,11 @@ class Scene:
 		"""
 			Called if an input key has not been handled by the scene widgets
 		"""
-		return
+		return False
+
+	def keypress_discarded(self, key):
+		"""
+			Called if an input key has not been handled by the scene widgets
+			Default is to call unhandled_keypress
+		"""
+		return self.unhandled_keypress(key)

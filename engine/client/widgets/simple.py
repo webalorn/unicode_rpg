@@ -62,10 +62,11 @@ class TextW(BoxW):
 	RE_SPACE = re.compile(r'(\S+)')
 
 	def __init__(self, text, *kargs, align="left", v_align="top", w_break=False,
-				text_format=None, strip_lines=True, size=None, **kwargs):
+				text_format=None, strip_lines=False, size=None, **kwargs):
 		if size is None:
 			size = (1, len(text))
 		super().__init__(*kargs, size=size, **kwargs)
+		self.text = ""
 		self.set_text(text)
 		self.align = align
 		self.v_align = v_align
@@ -75,8 +76,10 @@ class TextW(BoxW):
 		self.strip_lines = strip_lines
 
 	def set_text(self, text):
-		self.last_real_text = None
-		self.text = list(text) # To allow append / pop
+		if text != self.text:
+			self.last_real_text = None
+			self.text = list(text) # To allow append / pop
+			self.keep_drawn_grid = False
 
 	def get_displayed_text_list(self):
 		return self.text
@@ -94,7 +97,6 @@ class TextW(BoxW):
 		real_txt = []
 		if self.w_break:
 			real_txt = [txt[k:k+larg] for k in range(0, len(txt), larg)]
-			
 		else:
 			joined_txt = "".join(txt)
 			splited = [self.RE_SPACE.split(l) for l in joined_txt.splitlines()]
@@ -114,7 +116,6 @@ class TextW(BoxW):
 						else:
 							real_txt.append(list(word))
 					else:
-						pass
 						for c in word:
 							if not real_txt or len(real_txt[-1]) >= larg:
 								real_txt.append([])
@@ -240,7 +241,7 @@ class ImageW(BaseWidget):
 class KeyDisplayW(BoxW):
 	FORMAT = "key_display"
 
-	def __init__(self, key, *kargs, **kwargs):
+	def __init__(self, key=None, *kargs, **kwargs):
 		self.set_key(key)
 		super().__init__(*kargs, **kwargs)
 
@@ -248,15 +249,27 @@ class KeyDisplayW(BoxW):
 		if isinstance(key, str) or isinstance(key, KeyVal):
 			key = Key(key)
 		self.key = key
+		self.keep_drawn_grid = False
+		G.WINDOW.dims_changed = True
 
 	def compute_real_size(self, parent_size):
-		l = len(self.key.get_repr_symb())
+		l = len(self.get_repr_symb(self.key))
 		self.resize((1, 5 if l == 1 else 2 + l))
 		super().compute_real_size(parent_size)
 
 	def draw_widget(self):
 		super().draw_widget()
 		self.grid[0] = self.get_key_render(self.key)
+		if not self.key:
+			format = get_skin_format("game.input.key_input_empty")
+			format = inherit_union(self.displayed_format, format)
+			set_point_format(self.format_map, (0, self.size[1]//2), format)
+
+	@classmethod
+	def get_repr_symb(cls, key):
+		if key:
+			return key.get_repr_symb()
+		return to_skin_char("key_display.empty")
 
 	@classmethod
 	def get_key_render(cls, key, as_text=False):
@@ -264,7 +277,7 @@ class KeyDisplayW(BoxW):
 			This method can be used to include a "key display" as text in text
 			It returns an list of characters or character name if as_text is False
 		"""
-		key_symb = list(key.get_repr_symb())
+		key_symb = list(cls.get_repr_symb(key))
 		if len(key_symb) == 1:
 			key_symb = [" "] + key_symb + [" "]
 		render = ["key_display.left"] + key_symb + ["key_display.right"]

@@ -84,9 +84,9 @@ class WindowManager(BaseWidget, DispelMagic):
 	def detect_keys(self, keys_pressed):
 		PROFILER.start("detect_keys")
 		for key in keys_pressed:
-			if key.check("\t"):
+			if key.check("\t") and self.focusable_list:
 				self.next_focus()
-			elif key.check(KeyVal.REV_TAB):
+			elif key.check(KeyVal.REV_TAB) and self.focusable_list:
 				self.next_focus(-1)
 			else:
 				self.fire_key(key)

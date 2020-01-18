@@ -31,7 +31,8 @@
 
 		"key_display" : {
 			"left" : "[",
-			"right" : "]"
+			"right" : "]",
+			"empty" : "✗"
 		},
 
 		"game" : {
@@ -52,6 +53,7 @@
 		}
 	},
 	"format" : {
+		"error_message" : ["red", null, []],
 		"dim_text" : [246, null, []],
 		"button": null,
 		"button_focused" : ["gui_box_focused", null, []],
@@ -72,7 +74,8 @@
 				"box_item_focused" : [null, 237, []]
 			},
 			"input" : {
-				"key_input" : [null, 237, []]
+				"key_input" : [null, 237, []],
+				"key_input_empty" : [160, null, []]
 			}
 		},
 		"scene" : {

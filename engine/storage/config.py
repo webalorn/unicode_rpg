@@ -71,12 +71,13 @@ class ConfigManager:
 		elif len(path) == 1:
 			return conf_obj
 		else:
-			self.put_int_conf(conf_obj.setdefault(path[0], {}), path[1:])
+			return self.get_parent_dict(conf_obj.setdefault(path[0], {}), path[1:])
 
-	def set(self, category, key, value):
-		self.data[category][key] = value
-		key = [category] + key.split(".")
-		self.get_parent_dict(self.conf_data, key)[key[-1]] = value
+	def set(self, category, key, value, force=False):
+		if self.data[category].get(key, None) != value or force:
+			self.data[category][key] = value
+			key = [category] + key.split(".")
+			self.get_parent_dict(self.conf_data, key)[key[-1]] = value
 
 	def remove(self, category, key, value):
 		try:
@@ -96,13 +97,13 @@ class ConfigManager:
 
 class GameConfig(ConfigManager):
 	def get_key(self, key_name):
-		key = self.get(category, key)
-		return Key.from_repr(key) if key else None
+		key = self.get("keys", key_name)
+		return Key.from_repr(key) if key is not None else None
 
 	def set_key(self, key_name, key):
-		self.set("keys", key_name, key.to_repr() if key else None)
+		self.set("keys", key_name, key.to_repr() if key is not None else None)
 
 	def get_key_map(self):
 		return {
-			name : Key.from_repr(k) if k else None for name, k in self.data["keys"]
+			name : Key.from_repr(k) if k is not None else None for name, k in self.data["keys"]
 		}

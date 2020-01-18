@@ -110,18 +110,79 @@ class ScrollTextW(TextW):
 		txt = super().get_broke_text(larg)
 		return txt[self.scroll_pos:]
 
-class FormLayout(BoxW): # TODO : move focus
+class HorScrollLayoutW(HorLayoutW):
+	"""
+		Auto-scroll to show the rightmost element
+		Only work if the children have a fixed width (int)
+	"""
+
+	def __init__(self, *kargs, side_margin=0, **kwargs):
+		self.side_margin = side_margin
+		super().__init__(*kargs, **kwargs)
+
+	def compute_children_dims(self):
+		super().compute_children_dims()
+		if self.children:
+			if self.anchor == "left":
+				cur_margin = (self.size[1] - self.children[-1].rel_pos[1]
+					- self.children[-1].rel_size[1] - self.side_margin
+				)
+				if cur_margin < 0:
+					for child in self.children:
+						child.rel_pos = (child.rel_pos[0], child.rel_pos[1]+cur_margin)
+			elif self.anchor == "right":
+				cur_margin = self.children[0].rel_pos[1] - self.side_margin
+				if cur_margin < 0:
+					for child in self.children:
+						child.rel_pos = (child.rel_pos[0], child.rel_pos[1]-cur_margin)
+			else:
+				raise Error("HorScrollLayoutW can't work with {} anchor".format(self.anchor))
+
+class VertScrollLayoutW(VertLayoutW):
+	"""
+		Auto-scroll to show the rightmost element
+		Only work if the children have a fixed width (int)
+	"""
+
+	def __init__(self, *kargs, side_margin=0, **kwargs):
+		self.side_margin = side_margin
+		super().__init__(*kargs, **kwargs)
+
+	def compute_children_dims(self):
+		super().compute_children_dims()
+		if self.children:
+			if self.anchor == "bottom":
+				cur_margin = (self.size[0] - self.children[-1].rel_pos[0]
+					- self.children[-1].rel_size[0] - self.side_margin
+				)
+				if cur_margin < 0:
+					for child in self.children:
+						child.rel_pos = (child.rel_pos[0]+cur_margin, child.rel_pos[1])
+			elif self.anchor == "top":
+				cur_margin = self.children[0].rel_pos[0] - self.side_margin
+				if cur_margin < 0:
+					for child in self.children:
+						child.rel_pos = (child.rel_pos[0]-cur_margin, child.rel_pos[1])
+			else:
+				raise Error("VertScrollLayoutW can't work with {} anchor".format(self.anchor))
+
+########## Forms
+
+class FormLayoutW(BoxW): # TODO : move focus
 	"""
 		An ordered form allow to switch between input widgets with arrow keys.
 	"""
 	def __init__(self, *kargs, modal=True, **kwargs):
 		super().__init__(*kargs, modal=modal, **kwargs)
 
+	def move_focus(self, steps):
+		G.WINDOW.next_focus(steps, rotate=False)
+
 	def keypress(self, key):
 		if key.check(KeyVal.ARROW_UP):
-			G.WINDOW.next_focus(-1, rotate=False)
+			self.move_focus(-1)
 		elif key.check(KeyVal.ARROW_DOWN):
-			G.WINDOW.next_focus(1, rotate=False)
+			self.move_focus(1)
 		else:
 			return False
 		return True

@@ -3,10 +3,13 @@
 		"skin" : "user.json",
 		"dev_mode" : false
 	},
-	"keys" : {
-		"forward" : 0,
-		"left" : 1,
-		"right" : 2,
-		"backward" : 3
-	}
+	"keys": {
+        "game": {
+            "move_down": 2,
+            "action": "E",
+            "move_up": 0,
+            "move_right": 1,
+            "move_left": 3
+        }
+    }
 }

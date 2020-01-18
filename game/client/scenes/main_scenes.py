@@ -32,12 +32,12 @@ class MainMenuScene(Scene):
 			size=(-12, 26), border=(1, 0), pos=(12, "center"), col_size=2,
 			format="scene.main_menu.menu", v_align="center"
 		))
-		self.menu.add(MenuItem("CONTINUE", call=self.on_continue))
-		self.menu.add(MenuItem("NEW GAME", call=self.on_new_game))
-		self.menu.add(MenuItem("LOAD GAME", call=self.on_load_game))
-		self.menu.add(MenuItem("OPTIONS", call=self.on_options))
-		self.menu.add(MenuItem("ABOUT", call=self.on_about))
-		self.menu.add(MenuItem("QUIT", call=self.raise_exit))
+		self.menu.add(MenuItemW("CONTINUE", call=self.on_continue))
+		self.menu.add(MenuItemW("NEW GAME", call=self.on_new_game))
+		self.menu.add(MenuItemW("LOAD GAME", call=self.on_load_game))
+		self.menu.add(MenuItemW("OPTIONS", call=self.on_options))
+		self.menu.add(MenuItemW("ABOUT", call=self.on_about))
+		self.menu.add(MenuItemW("QUIT", call=self.raise_exit))
 		
 
 class OptionsScene(Scene):
@@ -46,7 +46,9 @@ class OptionsScene(Scene):
 		("game.move_down", "Move down"),
 		("game.move_left", "Move left"),
 		("game.move_right", "Move right"),
+		("game.action", "Interact / Act"),
 	]
+	MIN_PANEL_ARROW_CLOSE = 2
 
 	def __init__(self, *kargs, in_win=False, **kwargs):
 		super().__init__(*kargs, **kwargs)
@@ -56,19 +58,23 @@ class OptionsScene(Scene):
 	########## panels
 
 	def open_keys_panel(self):
-		menu = self.new_panel(KeyInputContainer(size=(1., 50), border=((0, 1), 0)))
+		menu = self.new_panel(BoxW(size=(1., 50)))
+		menu_keys = menu.add(KeyInputContainerW(size=(-1, 1.), pos=(1, 0), border=((0, 1), 0), side_margin=2))
+
+		help_text = " [ENTER] to change                [{}/X] to clear ".format(KEYS_SYMB[KeyVal.BACK])
+		menu.add(TextW(help_text, text_format="dim_text", size=(1, 1.), pos=(0, 0)))
 
 		for i_key, (key_name, key_text) in enumerate(self.CONFIG_KEYS):
-			menu.add(KeySetter(key_name, key_text, size=(3, 1.), pos=(i_key*3, 0)))
+			menu_keys.add(KeySetterW(key_name, key_text, size=(3, 1.), pos=(i_key*3, 0)))
 
 	def open_main_panel(self):
 		menu = self.new_panel(BoxMenuVertW(size=(1., 50), border=((0, 1), 0)))
 
-		menu.add(BoxMenuItem("KEYS", call=self.open_keys_panel))
-		menu.add(BoxMenuItem("SOUND", call=None))
-		menu.add(BoxMenuItem("TEXT", call=None))
-		menu.add(BoxMenuItem("OTHER", call=None))
-		menu.add(BoxMenuItem("BACK", call=self.close_panel))
+		menu.add(BoxMenuItemW("KEYS", call=self.open_keys_panel))
+		menu.add(BoxMenuItemW("SOUND", call=None))
+		menu.add(BoxMenuItemW("TEXT", call=None))
+		menu.add(BoxMenuItemW("OTHER", call=None))
+		menu.add(BoxMenuItemW("BACK", call=self.close_panel))
 
 	########## Mains
 
@@ -76,35 +82,31 @@ class OptionsScene(Scene):
 		self.canvas = self.root
 		if self.in_win:
 			self.canvas = self.root.add(BiGWinW())
-			self.canvas.ev_key.on(self.keypress)
+		self.container = self.canvas.add(HorScrollLayoutW(size=1., side_margin=2))
 
 		self.open_main_panel()
-		# self.open_keys_panel()
 
 		self.canvas.add(TextW("[ESC] to close", text_format="dim_text"))
-
-		# self.canvas.add(KeyInputW("Move forward", size=(3, 30), pos="center", format=(None, "black", [])))
 
 	def stop(self):
 		self.client.config.save()
 		super().stop()
 
-	def keypress_intercept(self, key):
-		if key.check(KeyVal.ESCAPE):
+	def unhandled_keypress(self, key):
+		if (key.check(KeyVal.ESCAPE) or
+			(key.check(KeyVal.ARROW_LEFT) and len(self.panels) >= self.MIN_PANEL_ARROW_CLOSE)):
 			self.close_panel()
-			return True
-		return False
+		elif key.check(KeyVal.ARROW_RIGHT):
+			if self.panels:
+				self.panels[-1].keypress(Key("\n"))
+		else:
+			return False
+		return True
 
 	########## Utility functions
 
-	def get_panel_right(self):
-		if not self.panels:
-			return 0
-		return self.panels[-1].pos[1] + self.panels[-1].size[1]
-
 	def new_panel(self, panel_widget):
-		self.canvas.add(panel_widget)
-		panel_widget.move_to((0, self.get_panel_right()))
+		self.container.add(panel_widget)
 		self.panels.append(panel_widget)
 		return panel_widget
 

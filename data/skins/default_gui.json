@@ -27,6 +27,15 @@
 			"up_left_right": "┴",
 			"up_down_right": "├",
 			"up_down_left": "┤"
+		},
+
+		"key_display" : {
+			"left" : "[",
+			"right" : "]"
+		},
+
+		"game" : {
+
 		}
 	},
 	"charset" : {
@@ -37,7 +46,10 @@
 		"button": "│─╭╮╰╯",
 		"button_focused": "║═╔╗╚╝",
 		"checkbox" : "[] ✔",
-		"radio" : "❬❭ ✘"
+		"radio" : "❬❭ ✘",
+		"game" : {
+
+		}
 	},
 	"format" : {
 		"dim_text" : [246, null, []],
@@ -52,7 +64,22 @@
 		"radio" : "checkbox",
 		"radio_focused" : "checkbox_focused",
 		"radio_cross" : "checkbox_cross",
-		"text_scroll_focused" : ["gui_box_focused", null, ["dim"]]
+		"text_scroll_focused" : ["gui_box_focused", null, ["dim"]],
+		"key_display" : [68, null, ["bold"]],
+
+		"game" : {
+			"menus" : {
+				"box_item_focused" : [null, 237, []]
+			},
+			"input" : {
+				"key_input" : [null, 237, []]
+			}
+		},
+		"scene" : {
+			"main_menu" : {
+				"menu" : [1, 234, ["bold"]]
+			}
+		}
 	},
 	"colors" : {
 		"back" : 233,
@@ -61,10 +88,8 @@
 		"gui_back_focused" : 240,
 		"gui_box_focused" : 87,
 		"gui_danger" : 160,
-		"scene" : {
-			"main_menu" : {
-				"color" : 1
-			}
+		"game" : {
+
 		}
 	}
 }

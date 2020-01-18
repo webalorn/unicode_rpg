@@ -7,7 +7,7 @@ class BaseWidget:
 	FORMAT_FOCUSED = None
 
 	def __init__(self, pos=(0, 0), size=(1, 1), add=[], inv_side=(False, False), modal=False,
-				format=None, focused_format=None):
+				format=None, focused_format=None, padding=((0, 0), (0, 0))):
 		super().__init__()
 		self.rel_pos = "-" # Coords can be : +x , -x, "center"
 		self.move_to(pos)
@@ -26,8 +26,9 @@ class BaseWidget:
 		self.add(add)
 
 		self.inv_side = inv_side
-		self.padding = ((0, 0), (0, 0))
+		self.padding = padding
 		self.modal = modal # Block keys for other widgets
+		self.ev_key_intercept = KeyPressEvent()
 		self.ev_key = KeyPressEvent()
 
 	def parse_format(self, format):
@@ -46,12 +47,15 @@ class BaseWidget:
 			self.displayed_format = inherit_union(self.parent.displayed_format, self.format)
 		if format != self.format:
 			self.displayed_format = inherit_union(self.displayed_format, format)
-		if format != None:
+		if self.displayed_format != None:
 			area = area or ((0, 0), self.size)
 			set_area_format(self.format_map, area, self.displayed_format)
 
+	def is_displayed_focused(self):
+		return self.focused
+
 	def get_format(self):
-		if self.focused:
+		if self.is_displayed_focused():
 			form = self.focused_format or get_skin_format(self.FORMAT_FOCUSED)
 			if form:
 				return form
@@ -65,23 +69,8 @@ class BaseWidget:
 		self.keep_drawn_grid = True
 		self.clear_grid()
 		self.set_display_format(self.get_format())
-
-	def get_real_padding(self):
-		return self.padding
-
-	def get_real_coord(self, grid_size):
-		coords = []
-		for x, sub_l, grid_l, inv in zip(to_tuple(self.rel_pos), self.size, grid_size, to_tuple(self.inv_side)):
-			if x in ("center", "c"):
-				x = (grid_l-sub_l)//2
-			elif isinstance(x, float):
-				x = int(grid_l*x - sub_l/2)
-			elif not isinstance(x, int):
-				raise Exception("Invalid coord", x)
-			if inv:
-				x = grid_l - x - sub_l
-			coords.append(x)
-		return tuple(coords)
+		for child in self.children:
+			child.keep_drawn_grid = False
 
 	def draw(self):
 		if self.need_draw():
@@ -114,6 +103,12 @@ class BaseWidget:
 			mark_dims_changed()
 			self.children = [w for w in self.children if id(w) != id(widget)]
 		return widget
+
+	def delete(self):
+		if self.parent:
+			self.parent.remove(self)
+		else:
+			raise Error("Can't delete a widget without parent")
 
 	def explore_focusable(self, focus_list): # return True if a modal has been seen, to stop exploration
 		for child in self.children[::-1]:
@@ -149,6 +144,23 @@ class BaseWidget:
 
 	def compute_children_dims(self):
 		pass
+
+	def get_real_padding(self):
+		return self.padding
+
+	def get_real_coord(self, grid_size):
+		coords = []
+		for x, sub_l, grid_l, inv in zip(to_tuple(self.rel_pos), self.size, grid_size, to_tuple(self.inv_side)):
+			if x in ("center", "c"):
+				x = (grid_l-sub_l)//2
+			elif isinstance(x, float):
+				x = int(grid_l*x - sub_l/2)
+			elif not isinstance(x, int):
+				raise Exception("Invalid coord", x)
+			if inv:
+				x = grid_l - x - sub_l
+			coords.append(x)
+		return tuple(coords)
 
 	def compute_real_size(self, parent_size):
 		if self.size != self.rel_size:
@@ -191,6 +203,8 @@ class BaseWidget:
 		return False
 
 	def fire_key(self, key):
+		if self.ev_key_intercept.fire(key):
+			return True
 		for child in self.children[::-1]: # Last child tested first
 			if child.fire_key(key): # The key has been used
 				return True

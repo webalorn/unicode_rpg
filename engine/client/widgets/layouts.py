@@ -109,3 +109,19 @@ class ScrollTextW(TextW):
 	def get_broke_text(self, larg):
 		txt = super().get_broke_text(larg)
 		return txt[self.scroll_pos:]
+
+class FormLayout(BoxW): # TODO : move focus
+	"""
+		An ordered form allow to switch between input widgets with arrow keys.
+	"""
+	def __init__(self, *kargs, modal=True, **kwargs):
+		super().__init__(*kargs, modal=modal, **kwargs)
+
+	def keypress(self, key):
+		if key.check(KeyVal.ARROW_UP):
+			G.WINDOW.next_focus(-1, rotate=False)
+		elif key.check(KeyVal.ARROW_DOWN):
+			G.WINDOW.next_focus(1, rotate=False)
+		else:
+			return False
+		return True

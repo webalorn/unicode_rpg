@@ -2,5 +2,11 @@
 	"main" : {
 		"skin" : "user.json",
 		"dev_mode" : false
+	},
+	"keys" : {
+		"forward" : 0,
+		"left" : 1,
+		"right" : 2,
+		"backward" : 3
 	}
 }

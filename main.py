@@ -1,5 +1,5 @@
 from engine import *
-from game.client import GameClient
+from game.client.client import GameClient
 import engine.consts as C
 import argparse
 

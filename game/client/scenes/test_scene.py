@@ -54,7 +54,7 @@ class TestScene(Scene):
 		box2 = BoxW(add=txt2, size=(6, 18), pos=6, border=1)
 		col.add(box2)
 		password = col.add(PasswordW("Guess me", size=(3, 16), border=1, limit=0))
-		self.root.ev_draw_begin.on(lambda : txt.set_text("-> " + password.get_real_text()))
+		self.window.ev_draw_begin.on(lambda : txt.set_text("-> " + password.get_real_text()))
 
 
 		super_txt = TextW("Super boite", size=(4, 16))

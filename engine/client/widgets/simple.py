@@ -11,36 +11,48 @@ class BoxW(BaseWidget):
 	BORDER_FOCUSED_STYLE = None
 
 	def __init__(self, *kargs, border=0, **kwargs):
-		self.border = border
+		self.set_border(border)
 		super().__init__(*kargs, **kwargs)
 
 	def get_real_padding(self):
 		(a, b), (c, d) = super().get_real_padding()
-		return ((a+self.border, b+self.border), (c+self.border, d+self.border))
+		return ((a+self.border[1][0], b+self.border[1][1]), (c+self.border[0][0], d+self.border[0][1]))
+
+	def set_border(self, border):
+		border = to_tuple(border)
+		self.border = (to_tuple(border[0]), to_tuple(border[1]))
 
 	def draw_border(self):
-		border = min(self.border, self.size[0], self.size[1])
+		border_r = min(self.border[0][0], self.size[0]), min(self.border[0][1], self.size[0])
+		border_c = min(self.border[1][0], self.size[1]), min(self.border[1][1], self.size[1])
 		nr, nc = self.size
-		if border:
+		b_min = min(min(border_r), min(border_c))
+		b_max = max(max(border_r), max(border_c))
+		if b_max:
 			symbs = get_charset(self.BORDER_FOCUSED or self.BORDER if self.focused else self.BORDER)
 			style = (self.BORDER_FOCUSED_STYLE if self.focused else None) or self.BORDER_STYLE
-			for decal in range(min(border, nr, nc)):
+			for decal in range(b_max):
 				for row in range(decal, nr-decal):
-					self.grid[row][decal] = symbs[0]
-					self.grid[row][-1-decal] = symbs[0]
-				self.grid[decal][decal:nc-decal] = [symbs[1]] * (nc-decal*2)
-				self.grid[-1-decal][decal:nc-decal] = [symbs[1]] * (nc-decal*2)
-				self.grid[decal][decal] = symbs[2]
-				self.grid[decal][-1-decal] = symbs[3]
-				self.grid[-1-decal][decal] = symbs[4]
-				self.grid[-1-decal][-1-decal] = symbs[5]
+					if decal < border_r[0]:
+						self.grid[row][decal] = symbs[0]
+					if decal < border_r[1]:
+						self.grid[row][-1-decal] = symbs[0]
+				if decal < border_c[0]:
+					self.grid[decal][decal:nc-decal] = [symbs[1]] * (nc-decal*2)
+				if decal < border_c[1]:
+					self.grid[-1-decal][decal:nc-decal] = [symbs[1]] * (nc-decal*2)
+				if decal < b_min:
+					self.grid[decal][decal] = symbs[2]
+					self.grid[decal][-1-decal] = symbs[3]
+					self.grid[-1-decal][decal] = symbs[4]
+					self.grid[-1-decal][-1-decal] = symbs[5]
 
 			if style:
 				style = get_skin_format(style)
-				set_area_format(self.format_map, ((0, 0), (border, nc)), style)
-				set_area_format(self.format_map, ((nr-border, 0), (nr, nc)), style)
-				set_area_format(self.format_map, ((0, 0), (nr, border)), style)
-				set_area_format(self.format_map, ((0, nc-border), (nr, nc)), style)
+				set_area_format(self.format_map, ((0, 0), (border_r[0], nc)), style)
+				set_area_format(self.format_map, ((nr-border_r[1], 0), (nr, nc)), style)
+				set_area_format(self.format_map, ((0, 0), (nr, border_c[0])), style)
+				set_area_format(self.format_map, ((0, nc-border_c[1]), (nr, nc)), style)
 
 	def draw_widget(self):
 		super().draw_widget()
@@ -224,3 +236,38 @@ class ImageW(BaseWidget):
 				if front == -1:
 					front = back_color
 				set_point_format(self.format_map, (i_row, i_col), (front, back, []))
+
+class KeyDisplayW(BoxW):
+	FORMAT = "key_display"
+
+	def __init__(self, key, *kargs, **kwargs):
+		self.set_key(key)
+		super().__init__(*kargs, **kwargs)
+
+	def set_key(self, key):
+		if isinstance(key, str) or isinstance(key, KeyVal):
+			key = Key(key)
+		self.key = key
+
+	def compute_real_size(self, parent_size):
+		l = len(self.key.get_repr_symb())
+		self.resize((1, 5 if l == 1 else 2 + l))
+		super().compute_real_size(parent_size)
+
+	def draw_widget(self):
+		super().draw_widget()
+		self.grid[0] = self.get_key_render(self.key)
+
+	@classmethod
+	def get_key_render(cls, key, as_text=False):
+		"""
+			This method can be used to include a "key display" as text in text
+			It returns an list of characters or character name if as_text is False
+		"""
+		key_symb = list(key.get_repr_symb())
+		if len(key_symb) == 1:
+			key_symb = [" "] + key_symb + [" "]
+		render = ["key_display.left"] + key_symb + ["key_display.right"]
+		if as_text:
+			return "".join([to_skin_char(c) if len(c) != 1 else c for c in render])
+		return render

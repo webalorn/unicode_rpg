@@ -61,6 +61,7 @@ class WindowManager(BaseWidget, DispelMagic):
 		el.keep_drawn_grid = False
 
 	def focus_element(self):
+		PROFILER.start("focus_element")
 		self.focusable_list = []
 		self.explore_focusable(self.focusable_list)
 		self.focusable_list = self.focusable_list[::-1]
@@ -68,15 +69,20 @@ class WindowManager(BaseWidget, DispelMagic):
 		i = self.get_focus_id()
 		if i != -1:
 			self.set_focus(self.focusable_list[i])
+		PROFILER.end("focus_element")
 
-	def next_focus(self, steps=1):
+	def next_focus(self, steps=1, rotate=True):
 		if self.focusable_list:
 			i = self.get_focus_id()
 			n = len(self.focusable_list)
-			i = (i + steps % n + n) % n
+			if rotate:
+				i = (i + steps % n + n) % n
+			else:
+				i = max(min(n-1, i+steps), 0)
 			self.set_focus(self.focusable_list[i])
 
 	def detect_keys(self, keys_pressed):
+		PROFILER.start("detect_keys")
 		for key in keys_pressed:
 			if key.check("\t"):
 				self.next_focus()
@@ -84,6 +90,7 @@ class WindowManager(BaseWidget, DispelMagic):
 				self.next_focus(-1)
 			else:
 				self.fire_key(key)
+		PROFILER.end("detect_keys")
 
 	def update(self, keys):
 		self.focus_element()
@@ -109,8 +116,8 @@ class WindowText(WindowManager):
 			self.dims_changed = False
 
 	def clear_screen(self, hard=False):
-		sys.stdout.write("\r")
-		sys.stdout.write("\033[K")
+		# sys.stdout.write("\r")
+		# sys.stdout.write("\033[K")
 		if not self.screen_cleared:
 			self.screen_cleared = True
 			if hard:

@@ -70,10 +70,14 @@ class Scene:
 			The root must be an widget, or the window for the root scene
 		"""
 		self.client = client
+		self.window = client.window
+
 		root_parent = client.window if root is None else root
 		self.root = root_parent.add(SceneRootW(self))
+
 		self.ev_stop = Event()
-		self.root.ev_key.on(self.keypress)
+		self.root.ev_key_intercept.on(self.keypress_intercept)
+		self.root.ev_key.on(self.unhandled_keypress)
 
 	def start(self):
 		"""
@@ -87,7 +91,7 @@ class Scene:
 		"""
 		self.ev_stop.fire()
 		self.try_stop_subscenes(self.root)
-		self.root.parent.remove(self.root)
+		self.root.delete()
 
 	def try_stop_subscenes(self, node):
 		for child in node.children:
@@ -105,5 +109,14 @@ class Scene:
 		w = self.root.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=self.raise_exit))
 		w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
 
-	def keypress(self, key):
+	def keypress_intercept(self, key):
+		"""
+			Called before all the widgets if all the scene added after rejected the key
+		"""
 		return False
+
+	def unhandled_keypress(self, key):
+		"""
+			Called if an input key has not been handled by the scene widgets
+		"""
+		return

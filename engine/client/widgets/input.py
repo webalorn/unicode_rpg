@@ -2,6 +2,8 @@ from .simple import *
 from engine.client.keys import *
 from engine import *
 
+########## Text & buttons
+
 class TextareaW(TextW):
 	FOCUSABLE = True
 
@@ -123,6 +125,7 @@ class MenuItem(TextW):
 	def __init__(self, *kargs, align="center", call=None, **kwargs):
 		super().__init__(*kargs, align=align, **kwargs)
 		self.ev_pressed = Event(call)
+		self.selected = False
 
 	def compute_real_size(self, parent_size):
 		larg = parent_size[1]
@@ -134,8 +137,12 @@ class MenuItem(TextW):
 	def pressed(self):
 		self.ev_pressed.fire()
 
+	def is_displayed_focused(self):
+		return self.focused or self.selected
+
 class MenuVertW(BoxW):
 	FOCUSABLE = True
+	CURSOR_CHAR = ["select_left", "select_right"]
 
 	def __init__(self, col_size=1, spacing=1, scroll=False, v_align="top", *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
@@ -149,9 +156,16 @@ class MenuVertW(BoxW):
 		padd = super().get_real_padding()
 		return (padd[0], add_coords(padd[1], (self.col_size, self.col_size)))
 
+	def set_children_selected(self, state):
+		if 0 <= self.cursor_pos < len(self.children):
+			self.children[self.cursor_pos].selected = state
+			self.children[self.cursor_pos].keep_drawn_grid = False
+
 	def move_cursor(self, rel):
+		self.set_children_selected(False)
 		self.cursor_pos += rel
 		self.cursor_pos = min(max(self.cursor_pos, 0), len(self.children)-1)
+		self.set_children_selected(True)
 		mark_dims_changed()
 
 	def compute_children_dims(self):
@@ -190,18 +204,19 @@ class MenuVertW(BoxW):
 			self.move_cursor(-1)
 		elif key.check(KeyVal.ARROW_DOWN):
 			self.move_cursor(1)
-		return True
+		return False
 
 	def draw_widget(self):
 		super().draw_widget()
-		if self.children and self.focused:
+		self.set_children_selected(True)
+		if self.children and self.focused and self.col_size:
 			padd = self.get_real_padding()
 			child = self.children[self.cursor_pos]
 
 			row = child.pos[0] + padd[0][0] + child.size[0] // 2
 			if row < len(self.grid) and row >= 0 and self.size[1]:
-				self.grid[row][padd[1][0]-1] = "select_left"
-				self.grid[row][-padd[1][1]] = "select_right"
+				self.grid[row][padd[1][0]-1] = self.CURSOR_CHAR[0]
+				self.grid[row][-padd[1][1]] = self.CURSOR_CHAR[1]
 
 ########## Other
 

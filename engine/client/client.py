@@ -1,5 +1,5 @@
 from engine.storage.skin import SkinManager
-from engine.storage.config import ConfigManager
+from engine.storage.config import GameConfig
 from engine.client.window import *
 from engine.client.widgets import *
 from engine.client.keys.keyboard import *
@@ -50,7 +50,7 @@ class Client:
 
 	def load_config(self, config_file):
 		try:
-			self.config = ConfigManager(config_file)
+			self.config = GameConfig(config_file)
 			self.skin = SkinManager(self.config.get("main", "skin"))
 			self.dev_mode = self.config.get("main", "dev_mode")
 		except BaseLoadError as e:

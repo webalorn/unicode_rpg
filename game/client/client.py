@@ -6,6 +6,6 @@ import engine.consts as C
 class GameClient(Client):
 	def start_first_scene(self):
 		if G.CLIENT.config.get("main", "dev_start_scene"):
-			self.load_scene(TestScene)
+			self.load_scene(OptionsScene)
 		else:
-			self.load_scene(OptionsPanelScene)
+			self.load_scene(MainMenuScene)

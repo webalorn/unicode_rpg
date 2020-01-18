@@ -4,6 +4,7 @@ from pathlib import Path
 from engine.common.exceptions import *
 from engine.common.log import *
 from collections import defaultdict
+from engine.client.keys import Key
 
 class ConfigManager:
 	"""
@@ -64,18 +65,26 @@ class ConfigManager:
 	def get(self, category, key):
 		return self.data.get(category, {}).get(key, None)
 
-	def put_int_conf(self, conf_obj, path, value):
+	def get_parent_dict(self, conf_obj, path):
 		if len(path) == 0:
 			raise Exception("Empty config key")
 		elif len(path) == 1:
-			conf_obj[path[0]] = value
+			return conf_obj
 		else:
-			self.put_int_conf(conf_obj.setdefault(path[0], {}), path[1:], value)
+			self.put_int_conf(conf_obj.setdefault(path[0], {}), path[1:])
 
 	def set(self, category, key, value):
 		self.data[category][key] = value
-		self.put_int_conf(self.conf_data, [category] + key.split("."), value)
-		log(self.conf_data)
+		key = [category] + key.split(".")
+		self.get_parent_dict(self.conf_data, key)[key[-1]] = value
+
+	def remove(self, category, key, value):
+		try:
+			key = [category] + key.split(".")
+			self.get_parent_dict(self.conf_data, key).pop(key[-1])
+			self.data[category].pop(key)
+		except KeyError:
+			pass # The key does not exist in the configuration. Don't remove if imported
 
 	def save(self):
 		try:
@@ -84,3 +93,16 @@ class ConfigManager:
 		except e:
 			log("Can't save config because", e, err=True)
 			raise e
+
+class GameConfig(ConfigManager):
+	def get_key(self, key_name):
+		key = self.get(category, key)
+		return Key.from_repr(key) if key else None
+
+	def set_key(self, key_name, key):
+		self.set("keys", key_name, key.to_repr() if key else None)
+
+	def get_key_map(self):
+		return {
+			name : Key.from_repr(k) if k else None for name, k in self.data["keys"]
+		}

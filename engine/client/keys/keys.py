@@ -1,7 +1,7 @@
 from engine import *
-from enum import Enum
+from enum import IntEnum
 
-class KeyVal(Enum):
+class KeyVal(IntEnum):
 	SPECIAL = -2
 	OTHER = -1
 
@@ -27,6 +27,22 @@ SPECIAL_KEY_MAP = {
 	'Z' : KeyVal.REV_TAB,
 }
 
+KEYS_MAPABLE = [
+	KeyVal.ARROW_UP, KeyVal.ARROW_RIGHT, KeyVal.ARROW_LEFT, KeyVal.ARROW_LEFT,
+]
+
+KEYS_SYMB = {
+	"\n" : "↵",
+	"\t" : "TAB",
+	" " : "SPACE",
+	KeyVal.BACK : "⌫",
+	KeyVal.ESCAPE : "ESC",
+	KeyVal.ARROW_UP : "↑",
+	KeyVal.ARROW_RIGHT : "→",
+	KeyVal.ARROW_DOWN : "↓",
+	KeyVal.ARROW_LEFT : "←",
+}
+
 class Key:
 	def __init__(self, key):
 		self.key = key
@@ -40,21 +56,33 @@ class Key:
 	def is_meta(self):
 		return isinstance(self.key, KeyVal)
 
-	def check(self, val):
+	def check(self, val, norm=True):
 		if isinstance(val, (list, tuple)):
 			for k in val:
-				if self.check(k):
+				if self.check(k, norm):
 					return True
 			return False
+		if norm and isinstance(val, str) and self.is_char():
+			return self.key.upper() == val.upper()
 		return self.key == val
 
 	def check_in_str(self, vals):
 		return isinstance(self.key, str) and self.key in vals
 
+	# Keys categories
+
 	def is_char_allowed(self, category="input"):
 		return isinstance(self.key, str) and (self.key.isalnum() or self.key in C.ALLOWED_CHARS[category])
 
+	def is_key_mapable(self):
+		return self.is_char_allowed("mapable") or (isinstance(self.key, KeyVal) and self in KEYS_MAPABLE)
+
 	# Conversion
+
+	def norm(self):
+		if isinstance(self.key, str):
+			return Key(self.key.upper())
+		return self
 
 	@classmethod
 	def input_to_keys_term(cls, keys):
@@ -77,3 +105,25 @@ class Key:
 			i += 1
 
 		return real_keys
+
+	@classmethod
+	def from_repr(cls, key):
+		if isinstance(key, str):
+			return Key(key)
+		elif isinstance:
+			return Key(KeyVal(key))
+		else:
+			raise Error("Key doesn't exist : ", key)
+
+	def to_repr(self):
+		if isinstance(self.key, str):
+			return self.key
+		return int(self.key)
+
+	def get_repr_symb(self):
+		if self.key in KEYS_SYMB:
+			return KEYS_SYMB[self.key]
+		elif isinstance(self.key, str):
+			return self.key
+		else:
+			raise Error("Key withoud symbol :", self.key)

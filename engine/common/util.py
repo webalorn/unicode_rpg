@@ -33,8 +33,8 @@ def inherit_union(parent, child):
 	if child == 'inherit' or child == ('inherit', 'inherit', 'inherit') or child is None:
 		return parent
 	if parent is None:
-		parent = EMPTY_FORMAT
-	return tuple([a if b == 'inherit' else b for a, b in zip(parent, child)])
+		parent = (None, None, None)
+	return tuple([a if b == 'inherit' or b is None else b for a, b in zip(parent, child)])
 
 
 ########################## Coords
@@ -52,5 +52,3 @@ def intersect_rects(rect1, rect2):
 	(_r1, _c1), (_r2, _c2) = rect1
 	(r1, c1), (r2, c2) = rect2
 	return ((max(r1, _r1), max(c1, _c1)), (min(r2, _r2), min(c2, _c2)))
-
-########################## Text

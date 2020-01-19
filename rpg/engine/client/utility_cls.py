@@ -16,8 +16,6 @@ class ScreenMap:
 			for col in range(col1, col2):
 				self.map[row][col] = widget
 
-	# def _ext_get(tab, pos):
-
 	def get_char_map(self):
 		return [
 			[
@@ -90,13 +88,14 @@ class Scene:
 		"""
 			Clean up your stuff
 		"""
+		self.root.scene = None
 		self.ev_stop.fire()
 		self.try_stop_subscenes(self.root)
 		self.root.delete()
 
 	def try_stop_subscenes(self, node):
 		for child in node.children:
-			if isinstance(child, SceneRootW):
+			if isinstance(child, SceneRootW) and node.scene:
 				node.scene.stop()
 			else:
 				self.try_stop_subscenes(child)

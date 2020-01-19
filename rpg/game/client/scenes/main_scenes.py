@@ -48,6 +48,11 @@ class OptionsScene(Scene):
 		("game.move_right", "Move right"),
 		("game.action", "Interact / Act"),
 	]
+	CONFIG_SOUND = [
+		("sound.main", "Main volume"),
+		("sound.music", "Music volume"),
+		("sound.effets", "Sound effets volume"),
+	]
 	MIN_PANEL_ARROW_CLOSE = 2
 
 	def __init__(self, *kargs, in_win=False, **kwargs):
@@ -58,22 +63,41 @@ class OptionsScene(Scene):
 	########## panels
 
 	def open_keys_panel(self):
-		menu = self.new_panel(BoxW(size=(1., 50)))
-		menu_keys = menu.add(KeyInputContainerW(size=(-1, 1.), pos=(1, 0), border=((0, 1), 0), side_margin=2))
+		menu = self.new_panel(BoxW(size=(1., 50), border=((0, 1), 0)))
+		menu_keys = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
 
 		help_text = " [ENTER] to change                [{}/X] to clear ".format(KEYS_SYMB[KeyVal.BACK])
 		menu.add(TextW(help_text, text_format="dim_text", size=(1, 1.), pos=(0, 0)))
 
-		for i_key, (key_name, key_text) in enumerate(self.CONFIG_KEYS):
-			menu_keys.add(KeySetterW(key_name, key_text, size=(3, 1.), pos=(i_key*3, 0)))
+		for key_name, key_text in self.CONFIG_KEYS:
+			menu_keys.add(KeySetterW(key_name, key_text, size=(3, 1.)))
+
+	def open_sound_panel(self): # TODO
+		menu = self.new_panel(BoxW(size=(1., 50), border=((0, 1), 0)))
+		menu_sound = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=5, h_align="center"))
+
+		help_text = " Left/Right arrow to change the volume"
+		menu.add(TextW(help_text, text_format="dim_text", size=(1, 1.), pos=(0, 0)))
+
+		for vol_name, vol_text in self.CONFIG_SOUND:
+			menu_sound.add(TextW(vol_text, size=(3, 48), v_align="center", padding=((0, 0), (2, 2))))
+			menu_sound.add(VolumeSetter(vol_name, size=(1, 47)))
+
+	def open_text_panel(self):
+		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
+		menu_text = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
+
+		text_intro = "To change the size of the game elements, change the font size in your terminal settings. A smaller font size will allow more elements on screen, but will make the game slower. If you experience slowness issues, try to set a bigger font-size, or the resize the window to make it smaller. It will decrease the number of cells the game needs to update each frame."
+		menu_text.add(TextW(text_intro, text_format="dim_text", size=(7, 1.), padding=((0, 0), (2,0))))
 
 	def open_main_panel(self):
 		menu = self.new_panel(BoxMenuVertW(size=(1., 50), border=((0, 1), 0)))
 
 		menu.add(BoxMenuItemW("KEYS", call=self.open_keys_panel))
-		menu.add(BoxMenuItemW("SOUND", call=None))
-		menu.add(BoxMenuItemW("TEXT", call=None))
+		menu.add(BoxMenuItemW("SOUND", call=self.open_sound_panel))
+		menu.add(BoxMenuItemW("TEXT", call=self.open_text_panel))
 		menu.add(BoxMenuItemW("OTHER", call=None))
+		menu.add(BoxMenuItemW("HELP", call=None))
 		menu.add(BoxMenuItemW("BACK", call=self.close_panel))
 
 	########## Mains
@@ -85,6 +109,7 @@ class OptionsScene(Scene):
 		self.container = self.canvas.add(HorScrollLayoutW(size=1., side_margin=2))
 
 		self.open_main_panel()
+		# self.open_sound_panel()
 
 		self.canvas.add(TextW("[ESC] to close", text_format="dim_text"))
 

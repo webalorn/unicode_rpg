@@ -75,7 +75,9 @@
 			},
 			"input" : {
 				"key_input" : [null, 237, []],
-				"key_input_empty" : [160, null, []]
+				"key_input_empty" : [160, null, []],
+				"volume_bar" : [25, 241, []],
+				"volume_bar_focused" : [28, 249, []]
 			}
 		},
 		"scene" : {

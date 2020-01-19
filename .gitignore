@@ -7,3 +7,4 @@ build/*
 *.pyc
 data/config/dev*
 *user.json
+*.spec

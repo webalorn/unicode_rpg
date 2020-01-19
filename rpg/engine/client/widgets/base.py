@@ -212,8 +212,9 @@ class BaseWidget:
 				if key_usage == -1 and not self.ev_key_discarded.fire(key):
 					return -1
 				return True
-		if self.keypress(key) or self.ev_key.fire(key):
-			return True
+		key_usage = self.keypress(key) or self.ev_key.fire(key)
+		if key_usage:
+			return key_usage
 		if self.modal: # Discard the key
 			return -1
 		return False

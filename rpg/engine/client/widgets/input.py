@@ -204,7 +204,9 @@ class MenuVertW(BoxW):
 			self.move_cursor(-1)
 		elif key.check(KeyVal.ARROW_DOWN):
 			self.move_cursor(1)
-		return False
+		else:
+			return -1
+		return True
 
 	def draw_widget(self):
 		super().draw_widget()
@@ -241,6 +243,8 @@ class BarInputW(BarW):
 			self.advance(1)
 		elif key.check(KeyVal.ARROW_LEFT):
 			self.advance(-1)
+		else:
+			return False
 		return True
 
 class CheckBoxW(BaseWidget):

@@ -1,6 +1,8 @@
 from engine.client.widgets import *
 from engine import *
 
+########## Keys
+
 class KeyInputW(TextW):
 	FOCUSABLE = True
 	FORMAT_FOCUSED = "game.input.key_input"
@@ -16,7 +18,7 @@ class KeySetterW(KeyInputW):
 		self.config_obj = config_obj if config_obj else G.CLIENT.config
 		super().__init__(text, **kwargs)
 
-		self.set_key(self.config_obj.get_key(key_tag))
+		self.key_w.set_key(self.config_obj.get_key(key_tag))
 
 	def set_key(self, key):
 		self.key_w.set_key(key)
@@ -60,11 +62,35 @@ class KeyPromptW(BaseWinW):
 			self.message.format = self.message.parse_format("error_message")
 		return True
 
-class KeyInputContainerW(FormLayoutW, VertLayoutW):
+########## Sound
+
+class VolumeSetter(BarInputW):
+	FORMAT = "game.input.volume_bar"
+	FORMAT_FOCUSED = "game.input.volume_bar_focused"
+
+	def __init__(self, vol_tag, config_obj=None, **kwargs):
+		self.vol_tag = vol_tag
+		self.config_obj = config_obj if config_obj else G.CLIENT.config
+
+		kwargs["step"] = 5
+		kwargs["start_at"] = self.config_obj.get_sound(self.vol_tag)
+		kwargs["maxi"] = 100
+		super().__init__(**kwargs)
+	
+	def set(self, volume):
+		super().set(volume)
+		self.config_obj.set_sound(self.vol_tag, volume)
+
+########## Containers
+
+class VertScrollFromW(FormLayoutW, VertLayoutW):
 	def __init__(self, *kargs, side_margin=2, **kwargs):
 		self.side_margin = side_margin
 		self.delta_row = 0
 		super().__init__(*kargs, **kwargs)
+
+	def set_visible_area(self, screen_map):
+		pass
 
 	def move_focus(self, steps):
 		super().move_focus(steps)

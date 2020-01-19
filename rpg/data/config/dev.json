@@ -1,0 +1,1 @@
+{"import": ["default.json"], "main": {"dev_mode": true, "dev_start_scene": true}, "keys": {"game": {"action": "E", "move_right": 1, "move_up": null, "move_down": null, "move_left": 3}}, "sound": {"sound": {"music": 35, "main": 80, "effets": 65}}}

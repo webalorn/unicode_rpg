@@ -1,5 +1,6 @@
 from engine.client.client import Scene
 from engine.client.widgets import *
+from engine.storage.skin import SkinManager
 from game.client.widgets import *
 from engine import *
 
@@ -23,7 +24,8 @@ class MainMenuScene(Scene):
 			self.client.load_scene(OptionsScene)
 		
 	def on_about(self):
-		self.root.add(ButtonsPopup("This project is WIP"))
+		win = self.root.add(ButtonsPopup("\nThis project is WIP\n\n([TAB] to move focus)", v_align="top"))
+		win.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=("center", "center")))
 
 	def start(self):
 		self.title = self.root.add(ImageW("title.cbi", pos=(0, "center")))
@@ -38,7 +40,6 @@ class MainMenuScene(Scene):
 		self.menu.add(MenuItemW("OPTIONS", call=self.on_options))
 		self.menu.add(MenuItemW("ABOUT", call=self.on_about))
 		self.menu.add(MenuItemW("QUIT", call=self.raise_exit))
-		
 
 class OptionsScene(Scene):
 	CONFIG_KEYS = [
@@ -81,7 +82,7 @@ class OptionsScene(Scene):
 
 		for vol_name, vol_text in self.CONFIG_SOUND:
 			menu_sound.add(TextW(vol_text, size=(3, 48), v_align="center", padding=((0, 0), (2, 2))))
-			menu_sound.add(VolumeSetter(vol_name, size=(1, 47)))
+			menu_sound.add(VolumeSetterW(vol_name, size=(1, 47)))
 
 	def open_text_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
@@ -90,12 +91,26 @@ class OptionsScene(Scene):
 		text_intro = "To change the size of the game elements, change the font size in your terminal settings. A smaller font size will allow more elements on screen, but will make the game slower. If you experience slowness issues, try to set a bigger font-size, or the resize the window to make it smaller. It will decrease the number of cells the game needs to update each frame."
 		menu_text.add(TextW(text_intro, text_format="dim_text", size=(7, 1.), padding=((0, 0), (2,0))))
 
+		if not self.client.force_skin: # If the skin is forced, we can't change it
+			menu_text.add(TextW("Change the game skin", padding=((0, 0), (2, 2)), size=(2, 1.),
+				text_format=(None, None, ["underlined"])))
+
+			skin_list = menu_text.add(SelectListW(self.get_skin_list(), pos=(10, 3),
+				start_id=self.client.config.get("main", "skin")))
+
+			def on_change_skin():
+				new_skin = skin_list.get_selected_key()
+				self.client.config.set("main", "skin", new_skin)
+				self.client.reload_skin()
+
+			skin_list.ev_changed.on(on_change_skin)
+
 	def open_main_panel(self):
 		menu = self.new_panel(BoxMenuVertW(size=(1., 50), border=((0, 1), 0)))
 
 		menu.add(BoxMenuItemW("KEYS", call=self.open_keys_panel))
 		menu.add(BoxMenuItemW("SOUND", call=self.open_sound_panel))
-		menu.add(BoxMenuItemW("TEXT", call=self.open_text_panel))
+		menu.add(BoxMenuItemW("APPEARANCE", call=self.open_text_panel))
 		menu.add(BoxMenuItemW("OTHER", call=None))
 		menu.add(BoxMenuItemW("HELP", call=None))
 		menu.add(BoxMenuItemW("BACK", call=self.close_panel))
@@ -109,7 +124,6 @@ class OptionsScene(Scene):
 		self.container = self.canvas.add(HorScrollLayoutW(size=1., side_margin=2))
 
 		self.open_main_panel()
-		# self.open_sound_panel()
 
 		self.canvas.add(TextW("[ESC] to close", text_format="dim_text"))
 
@@ -129,6 +143,11 @@ class OptionsScene(Scene):
 		return True
 
 	########## Utility functions
+
+	@staticmethod
+	def get_skin_list():
+		l = SkinManager.get_available_list()
+		return {el : "Skin " + el[:-5] for el in l}
 
 	def new_panel(self, panel_widget):
 		self.container.add(panel_widget)

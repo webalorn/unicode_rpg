@@ -3,7 +3,7 @@ from convert_image import make_conversion
 
 def get_all_images_paths(path):
 	files = list(path.iterdir())
-	imgs = [p for p in files if p.is_file() and str(p)[-4:] in [".png", ".jpg"]]
+	imgs = [p for p in files if p.is_file() and p.suffix in [".png", ".jpg"]]
 	for d in files:
 		if d.is_dir():
 			imgs.extend(get_all_images_paths(d))

@@ -45,7 +45,6 @@ class TextareaW(TextW):
 				txt = txt + [cursor]
 		return txt
 
-
 class TextInputW(TextareaW):
 	def get_displayed_text_list(self):
 		cursor = to_skin_char("cursor")
@@ -76,19 +75,18 @@ class ButtonW(TextW):
 	FOCUSABLE = True
 	FORMAT = 'button'
 	FORMAT_FOCUSED = 'button_focused'
-	BORDER = "border"
-	BORDER_FOCUSED = "border"
+	BORDER = "button"
+	BORDER_FOCUSED = "button_focused"
 
-	def __init__(self, text, *kargs, big=False, border=0, call=None, size=None, **kwargs):
+	def __init__(self, text, *kargs, big=False, border=0, call=None, size=None, align="center", **kwargs):
 		best_h = 3 if big else 1
 		if size is None:
 			size = (best_h, len(text)+2)
 		elif isinstance(size, (int, float)):
 			size = (best_h, size)
 
-		kwargs['align'] = 'center'
 		kwargs['v_align'] = 'center'
-		super().__init__(text, *kargs, size=size, **kwargs)
+		super().__init__(text, *kargs, align=align, size=size, **kwargs)
 		self.big = big
 
 		self.ev_pressed = Event(call)
@@ -205,7 +203,7 @@ class MenuVertW(BoxW):
 		elif key.check(KeyVal.ARROW_DOWN):
 			self.move_cursor(1)
 		else:
-			return -1
+			return False
 		return True
 
 	def draw_widget(self):

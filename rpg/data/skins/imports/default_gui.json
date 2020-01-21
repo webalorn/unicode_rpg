@@ -34,6 +34,9 @@
 			"right" : "]",
 			"empty" : "✗"
 		},
+		"select" : {
+			"down" : "▼"
+		},
 
 		"game" : {
 
@@ -68,6 +71,13 @@
 		"radio_cross" : "checkbox_cross",
 		"text_scroll_focused" : ["gui_box_focused", null, ["dim"]],
 		"key_display" : [68, null, ["bold"]],
+		"web_link" : [33, null, ["underlined"]],
+		"web_link_focused" : [null, 22, []],
+		"select" : {
+			"list_text" : [null, 236, []],
+			"list_item" : null,
+			"list_item_focused" : [123, 236, ["bold"]]
+		},
 
 		"game" : {
 			"menus" : {

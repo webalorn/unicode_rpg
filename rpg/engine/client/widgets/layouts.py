@@ -186,3 +186,43 @@ class FormLayoutW(BoxW): # TODO : move focus
 		else:
 			return False
 		return True
+
+class VertScrollFromW(FormLayoutW, VertLayoutW):
+	def __init__(self, *kargs, side_margin=2, **kwargs):
+		self.side_margin = side_margin
+		self.delta_row = 0
+		super().__init__(*kargs, **kwargs)
+
+	def set_visible_area(self, screen_map):
+		pass
+
+	def move_focus(self, steps):
+		super().move_focus(steps)
+		G.WINDOW.dims_changed = True
+
+	def apply_delta(self, delta):
+		for child in self.children:
+			child.rel_pos = (child.rel_pos[0]+delta, child.rel_pos[1])
+
+	def compute_children_dims(self):
+		super().compute_children_dims()
+		self.apply_delta(self.delta_row)
+
+		focused_child = None
+		for child in self.children:
+			if child.focused:
+				focused_child = child
+		if focused_child:
+			cur_margin_bottom = (self.size[0] - focused_child.rel_pos[0]
+				- focused_child.rel_size[0] - self.side_margin
+			)
+			cur_margin_top = focused_child.rel_pos[0] - self.side_margin
+			delta = 0
+			if cur_margin_top < 0:
+				delta = - cur_margin_top
+			elif cur_margin_bottom < 0:
+				delta = cur_margin_bottom
+
+			if delta:
+				self.apply_delta(delta)
+				self.delta_row += delta

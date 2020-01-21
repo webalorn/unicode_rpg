@@ -35,7 +35,8 @@ class ClientWorker(MagicThread):
 			time.sleep(delta)
 
 class Client:
-	def __init__(self, config_file="user.json"):
+	def __init__(self, config_file="user.json", force_skin=None):
+		self.force_skin = force_skin
 		self.load_config(config_file)
 		self.open_window()
 		init_client_globals(self)
@@ -51,12 +52,21 @@ class Client:
 	def load_config(self, config_file):
 		try:
 			self.config = GameConfig(config_file)
-			self.skin = SkinManager(self.config.get("main", "skin"))
+			self.skin = SkinManager(self.force_skin or self.config.get("main", "skin"))
 			self.dev_mode = self.config.get("main", "dev_mode")
 		except BaseLoadError as e:
 			raise e
 		except Exception as e:
 			raise BaseLoadError("Can't load config because : ", str(e))
+
+	def reload_skin(self):
+		self.skin = SkinManager(self.force_skin or self.config.get("main", "skin"))
+		def reload_tree(node):
+			node.keep_drawn_grid = False
+			for child in node.children:
+				reload_tree(child)
+		if self.window:
+			reload_tree(self.window)
 
 	def load_scene(self, scene_cls, **scene_args):
 		if self.scene:

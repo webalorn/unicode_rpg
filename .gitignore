@@ -8,3 +8,4 @@ build/*
 data/config/dev*
 *user.json
 *.spec
+*dev.json

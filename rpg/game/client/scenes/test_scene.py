@@ -6,13 +6,27 @@ import time
 
 class TestScene(Scene):
 	def start(self):
+		self.start_2()
+
+	def start_2(self):
+		def call_button():
+			self.root.add(TextPopupW("---------"))
+
+		self.root.add(ButtonW("Button", size=12, big=True, call=call_button))
+
+		l = ["value1", "value2", "value2", "Obi-Wan Kenobi"]
+		self.root.add(SelectListW(l, pos=(10, 3)))
+
+		self.root.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=(5, 3)))
+
+
+	def start_1(self):
 		def call2():
 			self.root.add(TextPopupW("So be it"))
 
 		def call_button():
 			# self.root.add(ConfirmPopupW("Do you want to continue ?", call=call2))
 			self.root.add(ButtonsPopup("Fenêtre avec des JOLIS boutons"))
-			# self.root.add(TextPopupW("Bouton cliqué"))
 
 		self.root.add(ButtonW("coucou", size=12, big=True, call=call_button))
 		self.root.add(BarInputW(1, size=30, format=('white', 'yellow', []), maxi=50, step=1, pos=(7, 3)))

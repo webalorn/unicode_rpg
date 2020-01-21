@@ -95,6 +95,10 @@ class ConfigManager:
 			log("Can't save config because", e, err=True)
 			raise e
 
+	@classmethod
+	def get_available_list(cls):
+		return [str(p.relative_to(cls.MAIN_PATH)) for p in Path(cls.MAIN_PATH).iterdir() if p.is_file() and p.suffix == ".json"]
+
 class GameConfig(ConfigManager):
 	def get_key(self, key_name):
 		key = self.get("keys", key_name)

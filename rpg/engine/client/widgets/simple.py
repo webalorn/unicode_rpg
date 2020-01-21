@@ -2,7 +2,7 @@ from .base import *
 from engine.client.keys import *
 from engine import *
 from pathlib import Path
-import re
+import re, webbrowser
 
 class BoxW(BaseWidget):
 	BORDER = "border"
@@ -74,6 +74,7 @@ class TextW(BoxW):
 		self.text_format = self.parse_format(text_format)
 		self.anchor_down = False
 		self.strip_lines = strip_lines
+		self.last_real_text = None
 
 	def set_text(self, text):
 		if text != self.text:
@@ -284,3 +285,18 @@ class KeyDisplayW(BoxW):
 		if as_text:
 			return "".join([to_skin_char(c) if len(c) != 1 else c for c in render])
 		return render
+
+class WebLinkW(TextW):
+	FOCUSABLE = True
+	FORMAT = "web_link"
+	FORMAT_FOCUSED = "web_link_focused"
+
+	def __init__(self, text, url, **kwargs):
+		self.url = url
+		super().__init__(text, **kwargs)
+
+	def keypress(self, key):
+		if self.focused and key.check("\n"):
+			webbrowser.open(self.url)
+			return True
+		return False

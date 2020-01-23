@@ -2,7 +2,7 @@ from .base import *
 from engine.client.keys import *
 from engine import *
 from pathlib import Path
-import re, webbrowser
+import re, webbrowser, copy
 
 class BoxW(BaseWidget):
 	BORDER = "border"
@@ -162,6 +162,16 @@ class TextW(BoxW):
 				format = inherit_union(self.displayed_format, self.text_format)
 				set_area_format(self.format_map, ((r, c1), (r+1, c2)), format)
 
+class SymbW(BaseWidget):
+	def __init__(self, symb, queue=[], **kwargs):
+		super().__init__(**kwargs)
+		self.symb = symb
+		self.resize((1, 2))
+
+	def draw_widget(self):
+		super().draw_widget()
+		self.grid = [[self.symb, '']]
+
 class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + default skin focused
 	FORMAT = "bar"
 
@@ -203,6 +213,8 @@ class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + defau
 			if queue:
 				row[plain_l] = queue
 
+########## Display data
+
 class ImageW(BaseWidget):
 	SOURCE_PATH = C.IMG_PATH
 
@@ -211,33 +223,94 @@ class ImageW(BaseWidget):
 		self.back_color = back_color
 		self.load(path)
 
-	def load(self, path):
+	def clear_grid(self):
+		pass
+
+	def load_image_data(self, path):
 		path = Path(self.SOURCE_PATH) / path
-		self.img = []
 		try:
 			with open(str(path), "r") as f:
 				img = f.readlines()
-				img = [[int(col) for col in row.split()] for row in img]
-				if len(img)%2:
-					img.append([-1]*len(img[0]))
-				self.img = [list(zip(r1, r2)) for r1, r2 in zip(img[0::2], img[1::2])]
-
-				nbcols = len(self.img[0]) if self.img else 0
-				self.resize((len(self.img), nbcols))
+				self.raw_img = [[int(col) for col in row.split()] for row in img]
+			return True
 		except OSError as e:
 			log("Could not open/read file {} because {}".format(path, str(e)))
+			raise e
 
-	def draw_widget(self):
-		super().draw_widget()
-		self.grid = [["▄"]*self.size[1] for _ in range(self.size[0])]
-		back_color = 'back' if self.back_color is None else self.back_color
-		for i_row, row in enumerate(self.img):
+	def make_final_image(self, img):
+		if len(img)%2:
+			img.append([-1]*len(img[0]))
+		return [list(zip(r1, r2)) for r1, r2 in zip(img[0::2], img[1::2])]
+
+	def compute_grids(self, img):
+		grid = [["▄"]*self.size[1] for _ in range(self.size[0])]
+		format_map = [[None]*self.size[1] for _ in range(self.size[0])]
+		back_color = 'back' if self.back_color in [None, 'back'] else self.back_color
+		for i_row, row in enumerate(img):
 			for i_col, (back, front) in enumerate(row):
 				if back == -1:
 					back = back_color
 				if front == -1:
 					front = back_color
-				set_point_format(self.format_map, (i_row, i_col), (front, back, []))
+				set_point_format(format_map, (i_row, i_col), (front, back, []))
+		return (grid, format_map)
+
+	def load(self, path):
+		if self.load_image_data(path):
+			self.img = self.make_final_image(self.raw_img)
+			nbcols = len(self.img[0]) if self.img else 0
+			self.resize((len(self.img), nbcols))
+
+	def draw_image(self):
+		self.grid, self.format_map = self.compute_grids(self.img)
+
+	# def set_visible_area(self, screen_map):
+	# 	if self.back_color != None:
+	# 		super().set_visible_area(screen_map)
+	# 	else:
+	# 		for r, row in enumerate(self.img):
+	# 			for c, (c1, c2) in enumerate(row):
+	# 				if c1 != -1 or c2 != -1:
+	# 					screen_map.set_point((r, c), self)
+
+	def draw_widget(self):
+		super().draw_widget()
+		self.draw_image()
+
+class AnimationW(ImageW):
+	def __init__(self, path, tile_size=None, nb_tiles=None, framerate=1, **kwargs):
+		if not tile_size:
+			raise Error("tile_size must be set")
+		self.tile_size = tile_size
+		kwargs["size"] = ((tile_size[0]+1)//2, tile_size[1])
+		self.framerate = framerate
+		self.nb_tiles = nb_tiles
+		self.last_drawn_id = None
+		super().__init__(path, **kwargs)
+
+	# def set_visible_area(self, screen_map):
+	# 	screen_map.set(None, self) # Because the image change
+
+	def load(self, path):
+		if self.load_image_data(path):
+			tileset_size = (len(self.raw_img) // self.size[0], len(self.raw_img[0]) // self.size[1])
+			self.nb_tiles = self.nb_tiles or tileset_size[0] * tileset_size[1]
+			tiles = []
+
+			for i in range(self.nb_tiles):
+				r = (i // tileset_size[1]) * self.size[0]
+				c = (i % tileset_size[1]) * self.size[1]
+				tiles.append(self.make_final_image(
+					[self.raw_img[l][c:c+self.tile_size[1]] for l in range(r, r+self.tile_size[0])]
+				))
+			self.tiles_grids = [self.compute_grids(img) for img in tiles]
+
+	def need_draw(self):
+		return super().need_draw() or self.last_drawn_id != get_cycle_val(self.framerate, self.nb_tiles)
+
+	def draw_image(self):
+		self.last_drawn_id = get_cycle_val(self.framerate, self.nb_tiles)
+		self.grid, self.format_map = self.tiles_grids[self.last_drawn_id]
 
 class KeyDisplayW(BoxW):
 	FORMAT = "key_display"

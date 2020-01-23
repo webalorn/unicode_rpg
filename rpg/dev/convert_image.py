@@ -4,18 +4,21 @@ import os
 
 color_path = os.path.join(os.path.dirname(__file__), "colors.txt")
 palette = [tuple(map(int, l.split())) for l in open(color_path, "r").readlines()]
+cols_computed = {}
 
 def col_dist(x, y):
 	return sum([abs(a-b)**2 for a, b in zip(x, y)])
 
 def get_nearest_id(col):
-	i_min, d_min = 0, 1e9
-	for i, pal_col in enumerate(palette):
-		d = col_dist(col, pal_col)
-		if d < d_min:
-			d_min = d
-			i_min = i
-	return i_min
+	if col not in cols_computed:
+		i_min, d_min = 0, 1e9
+		for i, pal_col in enumerate(palette):
+			d = col_dist(col, pal_col)
+			if d < d_min:
+				d_min = d
+				i_min = i
+		cols_computed[col] = i_min
+	return cols_computed[col]
 
 def convert(img):
 	ncols, nrows = img.size

@@ -60,6 +60,9 @@ class ScreenMapRel:
 			area = intersect_rects(area, self.area)
 		self.screen_map.set(area, widget)
 
+	def set_point(self, point, widget):
+		self.set((point, add_coords(point, (1, 1))), widget)
+
 ########## Scene : containers for widgets
 
 class Scene:

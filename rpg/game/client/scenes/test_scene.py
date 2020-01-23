@@ -19,6 +19,8 @@ class TestScene(Scene):
 
 		self.root.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=(5, 3)))
 
+		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1, pos="center"))
+
 
 	def start_1(self):
 		def call2():

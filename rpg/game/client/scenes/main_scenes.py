@@ -28,6 +28,11 @@ class MainMenuScene(Scene):
 		win.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=("center", "center")))
 
 	def start(self):
+		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1,
+			pos=(0, 0), inv_side=(True, False)))
+		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1,
+			pos=(0, 0), inv_side=(True, True)))
+
 		self.title = self.root.add(ImageW("title.cbi", pos=(0, "center")))
 
 		self.menu = self.root.add(MenuVertW(
@@ -84,7 +89,7 @@ class OptionsScene(Scene):
 			menu_sound.add(TextW(vol_text, size=(3, 48), v_align="center", padding=((0, 0), (2, 2))))
 			menu_sound.add(VolumeSetterW(vol_name, size=(1, 47)))
 
-	def open_text_panel(self):
+	def open_apperance_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
 		menu_text = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
 
@@ -93,7 +98,7 @@ class OptionsScene(Scene):
 
 		if not self.client.force_skin: # If the skin is forced, we can't change it
 			menu_text.add(TextW("Change the game skin", padding=((0, 0), (2, 2)), size=(2, 1.),
-				text_format=(None, None, ["underlined"])))
+				text_format="scene.conf.area_title"))
 
 			skin_list = menu_text.add(SelectListW(self.get_skin_list(), pos=(10, 3),
 				start_id=self.client.config.get("main", "skin")))
@@ -105,13 +110,33 @@ class OptionsScene(Scene):
 
 			skin_list.ev_changed.on(on_change_skin)
 
+	def open_other_panel(self):
+		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
+		menu_scroll = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
+
+		danger_area_title = menu_scroll.add(BoxW(size=(1, 1.)))
+		danger_area_title.add(SymbW("symb.danger", pos=(0, 0)))
+		danger_area_title.add(TextW(" Reset all settings", pos=(0, 3), size=(1, -4),
+			text_format="scene.conf.danger_area"))
+
+		def reset_settings_confirm():
+			def on_confirm():
+				self.client.config.reset()
+				self.client.reload_skin()
+				self.close_panel()
+			txt = "Area you sure you want to reset all settings ? All your changes to the configuration will be erased."
+			w = G.WINDOW.add(ConfirmPopupW(txt, call=on_confirm))
+			w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
+
+		menu_scroll.add(ButtonW("Reset settings", size=12, big=True, call=reset_settings_confirm))
+
 	def open_main_panel(self):
 		menu = self.new_panel(BoxMenuVertW(size=(1., 50), border=((0, 1), 0)))
 
 		menu.add(BoxMenuItemW("KEYS", call=self.open_keys_panel))
 		menu.add(BoxMenuItemW("SOUND", call=self.open_sound_panel))
-		menu.add(BoxMenuItemW("APPEARANCE", call=self.open_text_panel))
-		menu.add(BoxMenuItemW("OTHER", call=None))
+		menu.add(BoxMenuItemW("APPEARANCE", call=self.open_apperance_panel))
+		menu.add(BoxMenuItemW("OTHER", call=self.open_other_panel))
 		menu.add(BoxMenuItemW("HELP", call=None))
 		menu.add(BoxMenuItemW("BACK", call=self.close_panel))
 
@@ -124,6 +149,7 @@ class OptionsScene(Scene):
 		self.container = self.canvas.add(HorScrollLayoutW(size=1., side_margin=2))
 
 		self.open_main_panel()
+		# self.open_other_panel()
 
 		self.canvas.add(TextW("[ESC] to close", text_format="dim_text"))
 

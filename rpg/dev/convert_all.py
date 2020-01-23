@@ -11,7 +11,7 @@ def get_all_images_paths(path):
 
 def main():
 	source_path = Path("private/img")
-	dest_path = Path("data/img")
+	dest_path = Path("rpg/data/img")
 
 	imgs = get_all_images_paths(source_path)
 	imgs = [p.relative_to(source_path) for p in imgs]

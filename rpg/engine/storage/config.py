@@ -19,8 +19,6 @@ class ConfigManager:
 		self.set_config_path(file_path)
 		self.conf_data = {}
 		self.load_data()
-		if main_config:
-			self.data_loaded_action()
 		self.cfg_id = hash(self.config_path)
 
 	def set_config_path(self, file_path):
@@ -50,6 +48,9 @@ class ConfigManager:
 		for category, content in self.conf_data.items():
 			if category != "import":
 				self.create_data_flat_dict(content, [], self.data[category])
+
+		if self.main_config:
+			self.data_loaded_action()
 
 	def data_loaded_action(self):
 		pass
@@ -94,6 +95,11 @@ class ConfigManager:
 		except e:
 			log("Can't save config because", e, err=True)
 			raise e
+
+	def reset(self):
+		self.conf_data = self.DEFAULT_CONFIG
+		self.save()
+		self.load_data()
 
 	@classmethod
 	def get_available_list(cls):

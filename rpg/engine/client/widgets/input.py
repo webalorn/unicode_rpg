@@ -78,7 +78,7 @@ class ButtonW(TextW):
 	BORDER = "button"
 	BORDER_FOCUSED = "button_focused"
 
-	def __init__(self, text, *kargs, big=False, border=0, call=None, size=None, align="center", **kwargs):
+	def __init__(self, text, *kargs, big=True, border=0, call=None, size=None, align="center", **kwargs):
 		best_h = 3 if big else 1
 		if size is None:
 			size = (best_h, len(text)+2)

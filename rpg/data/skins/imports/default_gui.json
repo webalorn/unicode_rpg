@@ -28,6 +28,9 @@
 			"up_down_right": "├",
 			"up_down_left": "┤"
 		},
+		"symb" : {
+			"danger" : "⚠️ "
+		},
 
 		"key_display" : {
 			"left" : "[",
@@ -93,6 +96,10 @@
 		"scene" : {
 			"main_menu" : {
 				"menu" : [1, 234, ["bold"]]
+			},
+			"conf" : {
+				"area_title" : [null, null, ["underlined"]],
+				"danger_area" : [160, null, ["underlined"]]
 			}
 		}
 	},

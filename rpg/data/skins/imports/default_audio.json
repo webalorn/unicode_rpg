@@ -1,0 +1,14 @@
+{
+	"audio" : {
+		"music" : {
+			"main_menu" : "heroic_demise.wav"
+		},
+		"ui" : {
+			"menu_move" : "menu_select.wav",
+			"pressed" : "deep_event.wav",
+			"win_closed" : "deep_event.wav",
+			"checked" : "deep_event.wav",
+			"menu_select" : "blip_deep.wav"
+		}
+	}
+}

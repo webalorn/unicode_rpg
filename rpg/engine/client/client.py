@@ -3,9 +3,10 @@ from engine.storage.config import GameConfig
 from engine.client.window import *
 from engine.client.widgets import *
 from engine.client.keys.keyboard import *
-from .utility_cls import ScreenMap, ScreenMapRel, Scene
+from .utility_cls import ScreenMap, ScreenMapRel, Scene, DungeonScene
 import engine.consts as C
 from engine import *
+from .audio import SoundThread
 import time
 
 class ClientWorker(MagicThread):
@@ -18,12 +19,14 @@ class ClientWorker(MagicThread):
 		PROFILER.start("main loop")
 
 		client_make_step()
+
 		if self.EXTERN_EXIT.is_set():
 			self.EXTERN_EXIT.clear()
 			if self.client.scene:
 				self.client.scene.ask_exit()
 			else:
 				self.KILL_ME_PLEASE.set()
+
 		keys = self.client.input_manager.get_keys_gui()
 		self.client.window.update(keys)
 
@@ -41,6 +44,8 @@ class Client:
 		self.open_window()
 		init_client_globals(self)
 
+		self.audio = SoundThread()
+		self.audio.start()
 		self.input_manager = InputManager()
 		self.keyboard = self.window.get_keyboard_interface(self.input_manager)
 		self.worker = ClientWorker(self)
@@ -71,6 +76,7 @@ class Client:
 	def load_scene(self, scene_cls, **scene_args):
 		if self.scene:
 			self.scene.stop()
+		self.audio.stop_all() # Because we load a new main scene
 		self.scene = scene_cls(self, **scene_args)
 		self.scene.start()
 

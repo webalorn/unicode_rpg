@@ -18,7 +18,7 @@ class WindowManager(BaseWidget, DispelMagic):
 		self.displayed_format = EMPTY_FORMAT
 		self.dims_changed = True
 		
-		self.ev_draw_begin = Event()
+		self.ev_draw_begin = UIEvent()
 		self.last_writen_stdout = None
 
 	def get_keyboard_interface(self, input_manager):

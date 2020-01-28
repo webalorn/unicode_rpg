@@ -1,4 +1,4 @@
-class Event:
+class UIEvent:
 	def __init__(self, events=[], one_shot=False):
 		self.callbacks = []
 		self.one_shot = one_shot
@@ -26,7 +26,7 @@ class Event:
 			if f:
 				f(*args, **kwargs)
 
-class KeyPressEvent(Event):
+class KeyPressEvent(UIEvent):
 	def fire(self, key):
 		for f in self.callbacks:
 			if f and f(key):

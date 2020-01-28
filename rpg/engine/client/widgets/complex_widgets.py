@@ -40,7 +40,7 @@ class SelectListW(ButtonW):
 			kwargs["size"] = (3, size)
 		super().__init__(border=border, big=True, align=align, **kwargs)
 
-		self.ev_changed = Event()
+		self.ev_changed = UIEvent()
 		self.set_selected(start_id)
 
 	def set_selected(self, i):

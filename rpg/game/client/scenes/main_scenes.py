@@ -24,10 +24,17 @@ class MainMenuScene(Scene):
 			self.client.load_scene(OptionsScene)
 		
 	def on_about(self):
-		win = self.root.add(ButtonsPopup("\nThis project is WIP\n\n([TAB] to move focus)", v_align="top"))
+		about_message = ("\nThis project is WIP\n"
+			+ "\nDeveloped by @webalorn\n"
+			+ "Contact me at webalorn+urpg@gmail.com\n"
+		)
+
+		win = self.root.add(ButtonsPopup(about_message, v_align="top"))
 		win.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=("center", "center")))
 
 	def start(self):
+		self.client.audio.loop("music", "main_menu")
+
 		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1,
 			pos=(0, 0), inv_side=(True, False)))
 		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1,
@@ -55,9 +62,10 @@ class OptionsScene(Scene):
 		("game.action", "Interact / Act"),
 	]
 	CONFIG_SOUND = [
-		("sound.main", "Main volume"),
-		("sound.music", "Music volume"),
-		("sound.effets", "Sound effets volume"),
+		# ("main", "Main volume"),
+		# ("music", "Music volume"),
+		("effets", "Sound effets volume"),
+		("ui", "Interface volume"),
 	]
 	MIN_PANEL_ARROW_CLOSE = 2
 
@@ -124,7 +132,7 @@ class OptionsScene(Scene):
 				self.client.config.reset()
 				self.client.reload_skin()
 				self.close_panel()
-			txt = "Area you sure you want to reset all settings ? All your changes to the configuration will be erased."
+			txt = "Are you sure you want to reset all settings ? All your changes to the configuration will be erased."
 			w = G.WINDOW.add(ConfirmPopupW(txt, call=on_confirm))
 			w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
 

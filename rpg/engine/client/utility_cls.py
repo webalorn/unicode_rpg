@@ -2,6 +2,8 @@ from engine import *
 from engine.client.common.drawing import *
 from engine.client.widgets import *
 from engine.client.keys.keyboard import *
+from engine.dm.dm import DungeonMaster
+from threading import Lock
 
 ########## Screen map classes : map screen cells to widgets
 
@@ -76,7 +78,7 @@ class Scene:
 		root_parent = client.window if root is None else root
 		self.root = root_parent.add(SceneRootW(self))
 
-		self.ev_stop = Event()
+		self.ev_stop = UIEvent()
 		self.root.ev_key_intercept.on(self.keypress_intercept)
 		self.root.ev_key_discarded.on(self.keypress_discarded)
 		self.root.ev_key.on(self.unhandled_keypress)
@@ -130,3 +132,44 @@ class Scene:
 			Default is to call unhandled_keypress
 		"""
 		return self.unhandled_keypress(key)
+
+class DungeonScene(Scene):
+	"""
+		Base scene to create a game server
+	"""
+	def __init__(self, *kargs, serv_args={}, **kwargs):
+		super().__init__(*kargs, **kwargs)
+		self.dm = self.create_game_serv(**serv_args)
+		self.dm_lock = Lock()
+
+	def create_game_serv(self, **serv_args):
+		""" Should be overwride """
+		return DungeonMaster(**serv_args)
+
+	def test_dm_state(self):
+		if self.dm.DEAD.is_set():
+			raise ExitException("DM is dead")
+
+	def send_dm(self, *messages):
+		with self.dm_lock:
+			for m in messages:
+				self.dm.ext_pipe.send(m)
+
+	def get_from_dm(self):
+		with self.dm_lock:
+			return get_pipe_messages(self.dm.ext_pipe)
+
+	def start(self):
+		self.dm.start()
+		self.client.input_manager.clear_prio()
+		self.client.input_manager.register_prio(self)
+		self.client.window.ev_draw_begin.on(self.test_dm_state)
+
+	def stop(self):
+		self.client.input_manager.clear_prio()
+		self.dm.close_dm_ext()
+		self.ev_draw_begin.off(self.test_dm_state)
+		super().stop()
+
+	def accept_prio_key(self, key):
+		return False # Overwride to send keys directly to the DM

@@ -7,6 +7,7 @@ class GameClient(Client):
 	def start_first_scene(self):
 		if G.CLIENT.config.get("main", "dev_start_scene"):
 			# self.load_scene(OptionsScene)
-			self.load_scene(TestScene)
+			# self.load_scene(TestScene)
+			self.load_scene(GameTestScene)
 		else:
 			self.load_scene(MainMenuScene)

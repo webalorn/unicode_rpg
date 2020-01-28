@@ -243,7 +243,7 @@ class ImageW(BaseWidget):
 		return [list(zip(r1, r2)) for r1, r2 in zip(img[0::2], img[1::2])]
 
 	def compute_grids(self, img):
-		grid = [["▄"]*self.size[1] for _ in range(self.size[0])]
+		grid = [[to_skin_char("half")]*self.size[1] for _ in range(self.size[0])]
 		format_map = [[None]*self.size[1] for _ in range(self.size[0])]
 		back_color = 'back' if self.back_color in [None, 'back'] else self.back_color
 		for i_row, row in enumerate(img):

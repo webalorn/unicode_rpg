@@ -1,6 +1,7 @@
 *__pycache__*
 private*
 *.log
+*.prof
 dist/*
 build/*
 *.DS_Store

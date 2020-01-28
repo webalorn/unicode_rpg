@@ -18,6 +18,7 @@ class BaseWinW(BoxW):
 
 	def keypress(self, key):
 		if self.closeable and key.check(KeyVal.ESCAPE):
+			ui_sound("win_closed")
 			self.close()
 		return super().keypress(key)
 
@@ -34,6 +35,7 @@ class TextPopupW(BaseWinW):
 
 	def keypress(self, key):
 		if key.check("\n"):
+			ui_sound("win_closed")
 			self.close()
 		return super().keypress(key)
 

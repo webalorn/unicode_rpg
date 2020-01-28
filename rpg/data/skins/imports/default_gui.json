@@ -1,6 +1,7 @@
 {
 	"char": {
 		"block" : "#",
+		"half" : "▄",
 		"cursor" : "█",
 
 		"select_left" : "▶",

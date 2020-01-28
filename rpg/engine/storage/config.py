@@ -118,12 +118,12 @@ class GameConfig(ConfigManager):
 			name : Key.from_repr(k) if k is not None else None for name, k in self.data["keys"]
 		}
 
-	def set_sound(self, sound_name, volume): # Volume must be an integer between 0% and 100%
+	def set_sound(self, sound_name, volume): # Volume must be an integer between 0 and 100
 		self.set("sound", sound_name, max(0, min(int(volume), 100)))
 
 	def get_sound(self, sound_name):
 		volume = self.get("sound", sound_name)
-		return volume if volume is not None else 100 # 100% if not set
+		return volume if volume is not None else 20 # 100% if not set [20=100%]
 
 	def get_volume_multiplier(self, sound_name):
-		return self.get_sound(sound_name) / 100 * self.get_sound("main") / 100
+		return self.get_sound(sound_name) / 20

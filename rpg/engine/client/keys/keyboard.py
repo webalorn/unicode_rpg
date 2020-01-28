@@ -17,8 +17,12 @@ class NonBlockingContext:
 class InputManager():
 	def __init__(self):
 		self.keys_queue = Queue()
+		self.prio_list = []
 
 	def add_key(self, key):
+		for prio in self.prio_list:
+			if prio.accept_prio_key(key):
+				return
 		self.keys_queue.put(key)
 
 	def get_keys_gui(self):
@@ -29,6 +33,12 @@ class InputManager():
 			except:
 				break
 		return keys
+
+	def clear_prio(self):
+		self.prio_list = []
+
+	def register_prio(self, obj):
+		self.prio_list.append(obj)
 
 class Keyboard(MagicThread):
 	def __init__(self, input_manager):

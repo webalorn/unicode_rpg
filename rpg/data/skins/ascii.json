@@ -1,0 +1,60 @@
+{
+	"import" : ["imports/default_gui.json"],
+	"char": {
+		"block" : "#",
+		"half" : "#",
+		"cursor" : "#",
+
+		"select_left" : ">",
+		"select_right" : "<",
+		"select_block" : "#",
+
+		"border" : {
+			"simple" : "#",
+			"vert": "|",
+			"hor": "-",
+			"all": "+",
+
+			"up": "|",
+			"down": "|",
+			"left": "-",
+			"right": "-",
+
+			"down_left": ".",
+			"down_right": ".",
+			"up_left": ".",
+			"up_right": ".",
+
+			"down_left_right": ".",
+			"up_left_right": ".",
+			"up_down_right": ".",
+			"up_down_left": "."
+		},
+		"symb" : {
+			"danger" : "!!"
+		},
+
+		"key_display" : {
+			"left" : "[",
+			"right" : "]",
+			"empty" : "x"
+		},
+
+		"game" : {
+
+		}
+	},
+	"charset" : {
+		"password" : "*",
+		"bar": " $#",
+		"bar_fading": " $#",
+		"border": "|-++++",
+		"button": "|-++++",
+		"button_focused": "!=####",
+		"checkbox" : "[] v",
+		"radio" : "<> x",
+		"game" : {
+
+		}
+	}
+}

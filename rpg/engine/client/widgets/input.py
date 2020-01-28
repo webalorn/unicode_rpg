@@ -78,6 +78,8 @@ class ButtonW(TextW):
 	BORDER = "button"
 	BORDER_FOCUSED = "button_focused"
 
+	SOUND_PRESS = "pressed"
+
 	def __init__(self, text, *kargs, big=True, border=0, call=None, size=None, align="center", **kwargs):
 		best_h = 3 if big else 1
 		if size is None:
@@ -89,7 +91,7 @@ class ButtonW(TextW):
 		super().__init__(text, *kargs, align=align, size=size, **kwargs)
 		self.big = big
 
-		self.ev_pressed = Event(call)
+		self.ev_pressed = UIEvent(call)
 
 	def get_real_padding(self):
 		(a, b), (c, d) = super().get_real_padding()
@@ -99,6 +101,7 @@ class ButtonW(TextW):
 
 	def keypress(self, key):
 		if self.focused and key.check("\n"):
+			ui_sound(self.SOUND_PRESS)
 			self.ev_pressed.fire()
 			return True
 		return False
@@ -122,7 +125,7 @@ class ButtonW(TextW):
 class MenuItemW(TextW):
 	def __init__(self, *kargs, align="center", call=None, **kwargs):
 		super().__init__(*kargs, align=align, **kwargs)
-		self.ev_pressed = Event(call)
+		self.ev_pressed = UIEvent(call)
 		self.selected = False
 
 	def compute_real_size(self, parent_size):
@@ -141,6 +144,8 @@ class MenuItemW(TextW):
 class MenuVertW(BoxW):
 	FOCUSABLE = True
 	CURSOR_CHAR = ["select_left", "select_right"]
+	SOUND_MOVE = "menu_move"
+	SOUND_SELECT = "menu_select"
 
 	def __init__(self, col_size=1, spacing=1, scroll=False, v_align="top", *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
@@ -197,10 +202,13 @@ class MenuVertW(BoxW):
 		if not self.focused:
 			return False
 		if key.check("\n"):
+			ui_sound(self.SOUND_SELECT)
 			self.children[self.cursor_pos].pressed()
 		elif key.check(KeyVal.ARROW_UP):
+			ui_sound(self.SOUND_MOVE)
 			self.move_cursor(-1)
 		elif key.check(KeyVal.ARROW_DOWN):
+			ui_sound(self.SOUND_MOVE)
 			self.move_cursor(1)
 		else:
 			return False
@@ -276,6 +284,7 @@ class CheckBoxW(BaseWidget):
 		if not self.focused:
 			return False
 		if key.check(["\n", " "]):
+			ui_sound("checked")
 			self.press()
 		return True
 

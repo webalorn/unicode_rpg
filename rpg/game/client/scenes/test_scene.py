@@ -1,16 +1,32 @@
 from engine.client.window import *
 from engine.client.widgets import *
-from engine.client.client import Scene
+from engine.client.client import Scene, DungeonScene
+from engine.dm.dm import DungeonMaster
 from engine import *
 import time
 
-class TestScene(Scene):
-	def start(self):
-		self.start_2()
+class TestDM(DungeonMaster):
+	def main_loop(self, messages):
+		# log_dm("Main loop turn", time.time())
+		for m in messages:
+			if isinstance(m, Key):
+				log_dm("Got key", repr(m.key))
+		time.sleep(0.5)
 
-	def start_2(self):
+class GameTestScene(DungeonScene):
+	def create_game_serv(self):
+		return TestDM()
+
+	def accept_prio_key(self, key):
+		self.send_dm(key)
+		return False
+
+	def start(self):
+		super().start() # Very important here !!!
+		# self.client.audio.loop("music", "main_menu")
+		# self.client.audio.play("ui", "menu_select")
 		def call_button():
-			self.root.add(TextPopupW("---------"))
+			self.root.add(TextPopupW("Close me, please :'("))
 
 		self.root.add(ButtonW("Button", size=12, big=True, call=call_button))
 
@@ -19,7 +35,22 @@ class TestScene(Scene):
 
 		self.root.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=(5, 3)))
 
-		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1, pos="center"))
+class TestScene(Scene):
+	def start(self):
+		self.start_2()
+
+	def start_2(self):
+		def call_button():
+			self.root.add(TextPopupW("Close me, please :'("))
+
+		self.root.add(ButtonW("Button", size=12, big=True, call=call_button))
+
+		l = ["value1", "value2", "value2", "Obi-Wan Kenobi"]
+		self.root.add(SelectListW(l, pos=(10, 3)))
+
+		self.root.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=(5, 3)))
+
+		# self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1, pos="center"))
 
 
 	def start_1(self):

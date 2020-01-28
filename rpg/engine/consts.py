@@ -1,6 +1,6 @@
 # Main, and time
-PROG_NAME = "TEST PROG"
-VERSION = "0.0"
+PROG_NAME = "Unicode RPG"
+VERSION = "0.0.0-dev"
 LOOP_TIME = 0.2
 CURSOR_BLINK = 3
 
@@ -21,9 +21,13 @@ ALLOWED_CHARS = {
 # Storage
 DEBUG_LOG = "debug.log"
 ERR_LOG = "error.log"
+DEBUG_DM_LOG = "debug_dm.log"
+ERR_DM_LOG = "error_dm.log"
+
 SKINS_PATH = "data/skins"
 CONFIG_PATH = "data/config"
 IMG_PATH = "data/img"
+AUDIO_PATH = "data/audio"
 
 QUICK_CHARS = { None : ' ', 0 : ' ', 1 : "block", -1 : '', 2 : "border"}
 

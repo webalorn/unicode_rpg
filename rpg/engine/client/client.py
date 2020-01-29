@@ -6,7 +6,7 @@ from engine.client.keys.keyboard import *
 from .utility_cls import ScreenMap, ScreenMapRel, Scene, DungeonScene
 import engine.consts as C
 from engine import *
-from .audio import SoundThread
+from .audio import SoundManager
 import time
 
 class ClientWorker(MagicThread):
@@ -44,8 +44,7 @@ class Client:
 		self.open_window()
 		init_client_globals(self)
 
-		self.audio = SoundThread()
-		self.audio.start()
+		self.audio = SoundManager()
 		self.input_manager = InputManager()
 		self.keyboard = self.window.get_keyboard_interface(self.input_manager)
 		self.worker = ClientWorker(self)

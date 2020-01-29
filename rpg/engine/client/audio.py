@@ -1,121 +1,102 @@
-from threading import Thread
-from queue import Queue
-from collections import defaultdict
-import simpleaudio
-import time, wave, struct, array
+
 from engine import *
 import engine.consts as C
-from pathlib import Path
 
-class SoundPlayer:
-	def __init__(self, start_with=None, volume=1):
-		if abs(volume-1) < 0.001:
-			volume = 1
+from multiprocessing import Process, Pipe, Event
+from collections import defaultdict
+import time, pathlib
 
-		self.cache = {}
-		self.loop = False
-		self.volume = volume
-		self.cur_sound = None
-		self.last_path = None
-		if start_with:
-			self.start(start_with)
+class SoundPlayerProcess(Process):
+	def __init__(self, start_with=None, hungry=False, auto_start=True):
+		super().__init__(daemon=True)
+		self.hungry = hungry
+		self.sound_q_ext, self.sound_q_recv = Pipe()
+		self.playing = Event()
+		if auto_start:
+			self.start()
 
-	def stop(self):
-		if self.cur_sound:
-			self.cur_sound.stop()
-			self.cur_sound = None
-			self.loop = False
-			self.last_path = None
+	def run(self):
+		# Import here because otherwise it cause a crash
+		from engine.client.common.playsound import playsound
 
-	def get_sound_obj(self, path):
-		if not path in self.cache:
-			if self.volume == 1:
-				self.cache[path] = simpleaudio.WaveObject.from_wave_file(path)
-			else:
-				w = wave.open(path)
-				p = w.getparams()
-				sn = array.array('h')
-				sn.frombytes(w.readframes(p[3]))
-				sn = [min(32767, max(-32767, int(v*self.volume))) for v in sn]
-				s1 = struct.pack('h'*len(sn), *sn)
+		action, paths = "simple", None
+		while True:
+			if action != "loop" or self.sound_q_recv.poll():
+				action, paths = self.sound_q_recv.recv()
 
-				self.cache[path] = simpleaudio.WaveObject(s1, p.nchannels, p.sampwidth, p.framerate)
-		return self.cache[path]
+			if self.hungry:
+				while self.sound_q_recv.poll():
+					action, paths = self.sound_q_recv.recv()
+			self.playing.set()
+			if action == "simple":
+				for p in paths:
+					playsound(p)
+			elif action == "loop":
+				playsound(paths[0])
+				paths = paths[1:] + [paths[0]]
+			self.playing.clear()
 
-	def play(self, path, block=False):
-		self.stop()
-		o = self.get_sound_obj(path)
-		self.last_path = path
-		self.cur_sound = o.play()
-		if block:
-			self.cur_sound.wait_done()
+	def send_to_proc(self, action, paths):
+		self.sound_q_ext.send((action, paths if isinstance(paths, list) else [paths]))
 
-	def restart_loop(self):
-		if self.last_path and self.loop:
-			self.play(self.last_path)
-			self.loop = True
+	def queue(self, path):
+		self.send_to_proc("simple", path)
 
-	def is_playing(self):
-		return self.cur_sound and self.cur_sound.is_playing()
+	def loop(self, path):
+		self.send_to_proc("loop", path)
 
-	@classmethod
-	def stop_all(cls, path):
-		simpleaudio.stop_all()
-
-def play_sound(path, block=False):
-	s = SoundPlayer()
-	s.play(path, block)
-	return s
-
-class SoundThread(Thread):
+class SoundManager:
 	"""
 		This manager ensures the sound is loaded without slowing down the UI
 	"""
+	LONG_CHANNELS = ["music"]
+	WAITER_CHANNELS = ["music"]
+	INIT_CHANNELS = ["music", "ui"]
+
 	def __init__(self):
-		super().__init__(daemon=True)
-		self.channels = defaultdict(lambda: SoundPlayer())
-		self.play_q = Queue()
+		self.channels = {}
+		self.preloaded_chans = {}
 
-	def run(self):
-		while True:
-			try:
-				for name, chan in self.channels.items():
-					if chan.loop and not chan.is_playing():
-						chan.restart_loop()
-				while not self.play_q.empty():
-					chan, path = self.play_q.get(block=False)
-					if path == "stop":
-						if chan == "all":
-							for name, chan in self.channels.items():
-								chan.stop()
-						else:
-							self.channels[chan].stop()
-					elif path == "clear_cache":
+		for chan in self.LONG_CHANNELS:
+			if self.is_channel_active(chan):
+				self.init_chan(chan)
+				self.preloaded_chans[chan] = self.channels[chan]
+		self.channels = {}
+		for chan in self.INIT_CHANNELS:
+			self.init_chan(chan)
 
-						if chan == "all":
-							for name, chan in self.channels.items():
-								chan.cache = {}
-						else:
-							self.channels[chan].cache = {}
-					else:
-						self.channels[chan].play(path)
-			except Exception as e:
-				log("Got error in audio thread : ", e, err=True)
-			time.sleep(0.01)
+	def is_channel_active(self, chan):
+		return True
+		# return G.CLIENT.config.is_channel_active(chan)
 
-	def get_chan_volume(self, chan):
-		return G.CLIENT.config.get_volume_multiplier(chan)
+	def init_chan(self, chan, force=False):
+		if not chan in self.channels:
+			hungry = chan not in self.WAITER_CHANNELS
+			self.channels[chan] = SoundPlayerProcess(hungry=hungry)
+
+		elif (chan in self.LONG_CHANNELS) or force and self.channels[chan].playing.is_set():
+			self.channels[chan].terminate()
+			del self.channels[chan]
+			self.init_chan(chan)
+
+			if chan in self.LONG_CHANNELS:
+				self.channels[chan], self.preloaded_chans[chan] = self.preloaded_chans[chan], self.channels[chan]
 
 	def play_path(self, chan, path, loop=False):
-		self.channels[chan].volume = self.get_chan_volume(chan)
-		self.channels[chan].loop = loop
-		self.play_q.put((chan, path))
+		if self.is_channel_active(chan):
+			self.init_chan(chan)
+			log("Start", path, "loop ?", loop)
+			if loop:
+				self.channels[chan].loop(path)
+			else:
+				self.channels[chan].queue(path)
 
 	def play(self, chan, name, loop=False):
 		# Skin path will be audio.chan.name
+		log("Will play on {} the audio {}".format(chan, name))
 		path = G.CLIENT.skin.get("audio", ".".join([chan, name]))
 		if path:
-			path = Path(C.AUDIO_PATH) / chan / path
+			path = pathlib.Path(C.AUDIO_PATH) / chan / path
 			self.play_path(chan, str(path), loop=loop)
 		else:
 			log("Sound name doesn't exists", name)
@@ -124,10 +105,9 @@ class SoundThread(Thread):
 		self.play(chan, name, True)
 
 	def stop(self, chan):
-		self.play_q.put((chan, "stop"))
+		if chan in self.channels:
+			self.init_chan(chan, froce=True)
 
 	def stop_all(self):
-		self.play_q.put(("all", "stop"))
-
-	def clear_cache(self): # Needed if the volume change
-		self.play_q.put(("all", "clear_cache"))
+		for name, chan in self.channels.items():
+			self.stop(chan)

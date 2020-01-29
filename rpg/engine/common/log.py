@@ -12,12 +12,20 @@ class LogManagerFile(DispelMagic):
 		self.file_name = file_name
 
 	def write(self, *args):
-		if not self.writen:
-			self.file = open(self.file_name, 'w')
-			self.file.write(self.debug_line)
-			self.writen = True
-		self.file.write(*args)
-		self.file.flush()
+		try:
+			if not self.writen:
+				self.file = open(self.file_name, 'w')
+				self.file.write(self.debug_line)
+				self.writen = True
+			self.file.write(*args)
+			self.file.flush()
+		except:
+			try:
+				import sys
+				sys.stderr.write("[Can't log on {}]".format(self.file_name))
+				sys.stderr.write(*args)
+			except: # I can't log that i can't log that there is an error, what should I do ? :'(
+				pass
 
 	def pleaseCleanUpYourMessLate(self):
 		if self.file:

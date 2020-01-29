@@ -5,7 +5,7 @@ from game.client.widgets import *
 from engine import *
 
 class MainMenuScene(Scene):
-	OPTIONS_IN_WIN = True
+	OPTIONS_IN_WIN = False
 
 	def on_continue(self):
 		self.root.add(ButtonsPopup("The game does not yet exist"))
@@ -33,7 +33,7 @@ class MainMenuScene(Scene):
 		win.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=("center", "center")))
 
 	def start(self):
-		self.client.audio.loop("music", "main_menu")
+		self.client.audio.loop("main_menu")
 
 		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1,
 			pos=(0, 0), inv_side=(True, False)))
@@ -61,12 +61,6 @@ class OptionsScene(Scene):
 		("game.move_right", "Move right"),
 		("game.action", "Interact / Act"),
 	]
-	CONFIG_SOUND = [
-		# ("main", "Main volume"),
-		# ("music", "Music volume"),
-		("effets", "Sound effets volume"),
-		("ui", "Interface volume"),
-	]
 	MIN_PANEL_ARROW_CLOSE = 2
 
 	def __init__(self, *kargs, in_win=False, **kwargs):
@@ -86,29 +80,39 @@ class OptionsScene(Scene):
 		for key_name, key_text in self.CONFIG_KEYS:
 			menu_keys.add(KeySetterW(key_name, key_text, size=(3, 1.)))
 
-	def open_sound_panel(self): # TODO
-		menu = self.new_panel(BoxW(size=(1., 50), border=((0, 1), 0)))
-		menu_sound = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=5, h_align="center"))
-
-		help_text = " Left/Right arrow to change the volume"
-		menu.add(TextW(help_text, text_format="dim_text", size=(1, 1.), pos=(0, 0)))
-
-		for vol_name, vol_text in self.CONFIG_SOUND:
-			menu_sound.add(TextW(vol_text, size=(3, 48), v_align="center", padding=((0, 0), (2, 2))))
-			menu_sound.add(VolumeSetterW(vol_name, size=(1, 47)))
-
 	def open_apperance_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
 		menu_text = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
 
-		text_intro = "To change the size of the game elements, change the font size in your terminal settings. A smaller font size will allow more elements on screen, but will make the game slower. If you experience slowness issues, try to set a bigger font-size, or the resize the window to make it smaller. It will decrease the number of cells the game needs to update each frame."
-		menu_text.add(TextW(text_intro, text_format="dim_text", size=(7, 1.), padding=((0, 0), (2,0))))
+		### Music
+
+		text_sound = "Enable / Disable music"
+		menu_text.add(TextW(text_sound, size=(1, 1.), padding=((0, 0), (2, 0)), text_format="scene.conf.area_title"))
+
+		music_box = menu_text.add(BoxW(size=(3, 1.), border=0))
+		check_music = music_box.add(CheckBoxW(G.CLIENT.config.get("main", "music"), pos=(1, 2)))
+		music_state = music_box.add(TextW("---", size=(1, -4), pos=(1, 10)))
+
+		def on_change_music():
+			if check_music.checked:
+				music_state.set_text("Music enabled", format="scene.conf.on_state")
+			else:
+				music_state.set_text("Music disabled", format="scene.conf.off_state")
+			G.CLIENT.config.set("main", "music", check_music.checked)
+		check_music.ev_change.on(on_change_music)
+		on_change_music()
+
+		### Skin
 
 		if not self.client.force_skin: # If the skin is forced, we can't change it
 			menu_text.add(TextW("Change the game skin", padding=((0, 0), (2, 2)), size=(2, 1.),
 				text_format="scene.conf.area_title"))
 
-			skin_list = menu_text.add(SelectListW(self.get_skin_list(), pos=(10, 3),
+			text_intro = "To change the size of the game elements, change the font size in your terminal settings. A smaller font size will allow more elements on screen, but will make the game slower. If you experience slowness issues, try to set a bigger font-size, or the resize the window to make it smaller. It will decrease the number of cells the game needs to update each frame."
+			menu_text.add(TextW(text_intro, text_format="dim_text", size=(7, 1.), padding=((0, 0), (2,0))))
+
+			b = menu_text.add(BoxW(size=(5, 1.)))
+			skin_list = b.add(SelectListW(self.get_skin_list(), pos=(0, 2),
 				start_id=self.client.config.get("main", "skin")))
 
 			def on_change_skin():
@@ -142,8 +146,7 @@ class OptionsScene(Scene):
 		menu = self.new_panel(BoxMenuVertW(size=(1., 50), border=((0, 1), 0)))
 
 		menu.add(BoxMenuItemW("KEYS", call=self.open_keys_panel))
-		menu.add(BoxMenuItemW("SOUND", call=self.open_sound_panel))
-		menu.add(BoxMenuItemW("APPEARANCE", call=self.open_apperance_panel))
+		menu.add(BoxMenuItemW("SOUND & APPEARANCE", call=self.open_apperance_panel))
 		menu.add(BoxMenuItemW("OTHER", call=self.open_other_panel))
 		menu.add(BoxMenuItemW("HELP", call=None))
 		menu.add(BoxMenuItemW("BACK", call=self.close_panel))
@@ -156,10 +159,11 @@ class OptionsScene(Scene):
 			self.canvas = self.root.add(BiGWinW())
 		self.container = self.canvas.add(HorScrollLayoutW(size=1., side_margin=2))
 
-		self.open_main_panel()
-		# self.open_other_panel()
+		# self.open_main_panel()
+		self.open_apperance_panel()
 
-		self.canvas.add(TextW("[ESC] to close", text_format="dim_text"))
+		self.canvas.add(TextW(" [ESC] to close             [TAB] to switch           Arrows to move",
+			text_format="dim_text"))
 
 	def stop(self):
 		self.client.config.save()

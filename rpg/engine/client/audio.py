@@ -7,26 +7,27 @@ from collections import defaultdict
 import time, pathlib
 
 class SoundPlayerProcess(Process):
-	def __init__(self, start_with=None, hungry=False, auto_start=True):
+	def __init__(self, start_with=None, hungry=False):
 		super().__init__(daemon=True)
 		self.hungry = hungry
 		self.sound_q_ext, self.sound_q_recv = Pipe()
 		self.playing = Event()
-		if auto_start:
-			self.start()
 
 	def run(self):
 		# Import here because otherwise it cause a crash
+		# print("I AM HERE " + str(self))
 		from engine.client.common.playsound import playsound
 
 		action, paths = "simple", None
 		while True:
+			# print("LOOP " + str(self))
 			if action != "loop" or self.sound_q_recv.poll():
 				action, paths = self.sound_q_recv.recv()
 
 			if self.hungry:
 				while self.sound_q_recv.poll():
 					action, paths = self.sound_q_recv.recv()
+			# print("OK FOR", action, paths)
 			self.playing.set()
 			if action == "simple":
 				for p in paths:
@@ -49,65 +50,47 @@ class SoundManager:
 	"""
 		This manager ensures the sound is loaded without slowing down the UI
 	"""
-	LONG_CHANNELS = ["music"]
-	WAITER_CHANNELS = ["music"]
-	INIT_CHANNELS = ["music", "ui"]
+
+	def create_chan(self):
+		log("CREATE")
+		chan = SoundPlayerProcess()
+		chan.start()
+		return chan
 
 	def __init__(self):
-		self.channels = {}
-		self.preloaded_chans = {}
+		self.chan = self.create_chan()
+		self.preloaded_chan = self.create_chan()
 
-		for chan in self.LONG_CHANNELS:
-			if self.is_channel_active(chan):
-				self.init_chan(chan)
-				self.preloaded_chans[chan] = self.channels[chan]
-		self.channels = {}
-		for chan in self.INIT_CHANNELS:
-			self.init_chan(chan)
+	def is_sound_enabled(self):
+		return G.CLIENT.config.get("main", "music")
 
-	def is_channel_active(self, chan):
-		return True
-		# return G.CLIENT.config.is_channel_active(chan)
-
-	def init_chan(self, chan, force=False):
-		if not chan in self.channels:
-			hungry = chan not in self.WAITER_CHANNELS
-			self.channels[chan] = SoundPlayerProcess(hungry=hungry)
-
-		elif (chan in self.LONG_CHANNELS) or force and self.channels[chan].playing.is_set():
-			self.channels[chan].terminate()
-			del self.channels[chan]
-			self.init_chan(chan)
-
-			if chan in self.LONG_CHANNELS:
-				self.channels[chan], self.preloaded_chans[chan] = self.preloaded_chans[chan], self.channels[chan]
-
-	def play_path(self, chan, path, loop=False):
-		if self.is_channel_active(chan):
-			self.init_chan(chan)
-			log("Start", path, "loop ?", loop)
+	def queue_path(self, path, loop=False, stop=True):
+		if stop:
+			self.stop()
+		if self.is_sound_enabled():
+			log("queue", path, loop, self.chan, self.preloaded_chan)
 			if loop:
-				self.channels[chan].loop(path)
+				self.chan.loop(path)
 			else:
-				self.channels[chan].queue(path)
+				self.chan.queue(path)
 
-	def play(self, chan, name, loop=False):
-		# Skin path will be audio.chan.name
-		log("Will play on {} the audio {}".format(chan, name))
-		path = G.CLIENT.skin.get("audio", ".".join([chan, name]))
+	def play(self, name, loop=False, stop=True):
+		path = G.CLIENT.skin.get("audio", name)
+		log(name, path)
 		if path:
-			path = pathlib.Path(C.AUDIO_PATH) / chan / path
-			self.play_path(chan, str(path), loop=loop)
+			path = pathlib.Path(C.AUDIO_PATH) / path
+			self.queue_path(str(path), loop=loop, stop=stop)
 		else:
 			log("Sound name doesn't exists", name)
 
-	def loop(self, chan, name):
-		self.play(chan, name, True)
+	def loop(self, name, stop=True):
+		self.play(name, True, stop)
 
-	def stop(self, chan):
-		if chan in self.channels:
-			self.init_chan(chan, froce=True)
-
-	def stop_all(self):
-		for name, chan in self.channels.items():
-			self.stop(chan)
+	def stop(self):
+		log("STOP", self.chan.playing.is_set(), self.chan.is_alive())
+		if self.chan.playing.is_set():
+			self.chan.terminate()
+			self.chan.join()
+			log(self.chan, self.chan.is_alive())
+			self.chan = self.preloaded_chan
+		self.preloaded_chan = self.create_chan()

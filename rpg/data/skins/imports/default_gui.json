@@ -80,7 +80,7 @@
 		"select" : {
 			"list_text" : [null, 236, []],
 			"list_item" : null,
-			"list_item_focused" : [123, 236, ["bold"]]
+			"list_item_focused" : ["gui_txt_focused", 236, ["bold"]]
 		},
 
 		"game" : {
@@ -100,14 +100,16 @@
 			},
 			"conf" : {
 				"area_title" : [null, null, ["underlined"]],
-				"danger_area" : [160, null, ["underlined"]]
+				"danger_area" : [160, null, ["underlined"]],
+				"on_state" : [28, null, []],
+				"off_state" : [160, null, []]
 			}
 		}
 	},
 	"colors" : {
 		"back" : 233,
 		"text" : 253,
-		"gui_txt_focused" : "white",
+		"gui_txt_focused" : 123,
 		"gui_back_focused" : 240,
 		"gui_box_focused" : 87,
 		"gui_danger" : 160,

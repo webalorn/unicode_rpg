@@ -39,6 +39,7 @@ class ClientWorker(MagicThread):
 
 class Client:
 	def __init__(self, config_file="user.json", force_skin=None):
+		self.keyboard = None
 		self.force_skin = force_skin
 		self.load_config(config_file)
 		self.open_window()
@@ -75,7 +76,7 @@ class Client:
 	def load_scene(self, scene_cls, **scene_args):
 		if self.scene:
 			self.scene.stop()
-		self.audio.stop_all() # Because we load a new main scene
+		self.audio.stop() # Because we load a new main scene
 		self.scene = scene_cls(self, **scene_args)
 		self.scene.start()
 

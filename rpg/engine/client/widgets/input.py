@@ -101,7 +101,6 @@ class ButtonW(TextW):
 
 	def keypress(self, key):
 		if self.focused and key.check("\n"):
-			ui_sound(self.SOUND_PRESS)
 			self.ev_pressed.fire()
 			return True
 		return False
@@ -202,13 +201,10 @@ class MenuVertW(BoxW):
 		if not self.focused:
 			return False
 		if key.check("\n"):
-			ui_sound(self.SOUND_SELECT)
 			self.children[self.cursor_pos].pressed()
 		elif key.check(KeyVal.ARROW_UP):
-			ui_sound(self.SOUND_MOVE)
 			self.move_cursor(-1)
 		elif key.check(KeyVal.ARROW_DOWN):
-			ui_sound(self.SOUND_MOVE)
 			self.move_cursor(1)
 		else:
 			return False
@@ -263,6 +259,7 @@ class CheckBoxW(BaseWidget):
 	def __init__(self, checked=False, *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
 		self.checked = checked
+		self.ev_change = UIEvent()
 
 	def resize(self, new_size):
 		super().resize((1, 3))
@@ -279,13 +276,15 @@ class CheckBoxW(BaseWidget):
 
 	def press(self):
 		self.checked = not self.checked
+		self.ev_change.fire()
 
 	def keypress(self, key):
 		if not self.focused:
 			return False
 		if key.check(["\n", " "]):
-			ui_sound("checked")
 			self.press()
+		else:
+			return False
 		return True
 
 class RadioGroupW(BoxW):

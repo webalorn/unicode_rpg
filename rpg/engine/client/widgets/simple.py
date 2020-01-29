@@ -67,17 +67,19 @@ class TextW(BoxW):
 			size = (1, len(text))
 		super().__init__(*kargs, size=size, **kwargs)
 		self.text = ""
-		self.set_text(text)
+		self.text_format = None
+		self.set_text(text, text_format)
 		self.align = align
 		self.v_align = v_align
 		self.w_break = w_break
-		self.text_format = self.parse_format(text_format)
 		self.anchor_down = False
 		self.strip_lines = strip_lines
 		self.last_real_text = None
 
-	def set_text(self, text):
-		if text != self.text:
+	def set_text(self, text, format=None):
+		parsed_format = self.parse_format(format) if format else None
+		if text != self.text or (parsed_format and parsed_format != self.text_format):
+			self.text_format = parsed_format
 			self.last_real_text = None
 			self.text = list(text) # To allow append / pop
 			self.keep_drawn_grid = False

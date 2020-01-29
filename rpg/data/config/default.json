@@ -2,7 +2,8 @@
 	"main" : {
 		"skin" : "user.json",
 		"dev_mode" : false,
-        "dev_start_scene" : false
+        "dev_start_scene" : false,
+        "music": true
 	},
 	"keys": {
         "game": {

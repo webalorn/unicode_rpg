@@ -167,8 +167,9 @@ class WindowText(WindowManager):
 		PROFILER.end("win - 0 - print_screen")
 
 	def pleaseCleanUpYourMess(self):
-		with self.client.keyboard.io_lock:
-			sys.stdout.write("\033[0m")
-			self.clear_screen(True)
-			sys.stdout.flush()
-			self.cursor.show()
+		if self.client.keyboard:
+			with self.client.keyboard.io_lock:
+				sys.stdout.write("\033[0m")
+				self.clear_screen(True)
+				sys.stdout.flush()
+				self.cursor.show()

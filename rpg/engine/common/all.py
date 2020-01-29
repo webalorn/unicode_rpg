@@ -29,10 +29,6 @@ def get_skin_format(name):
 		name =  G.CLIENT.skin.data["format"].get(name, None)
 	return name
 
-def ui_sound(name):
-	if name:
-		G.CLIENT.audio.play("ui", name)
-
 ########## Setting and cleaning up
 
 class DispelMagic:

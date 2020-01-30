@@ -157,11 +157,13 @@ class WindowText(WindowManager):
 		if self.last_writen_stdout != grid_hash:
 			self.last_writen_stdout = grid_hash
 			with self.client.keyboard.io_lock:
+				# PROFILER.log_task_start("Write grid")
 				self.clear_screen()
 				self.screen_cleared = False
 
 				sys.stdout.write(printed_grid_string)
 				sys.stdout.flush()
+				# PROFILER.log_task_end("Write grid")
 		
 		PROFILER.end("win - 6 - write grid")
 		PROFILER.end("win - 0 - print_screen")

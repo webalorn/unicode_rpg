@@ -6,6 +6,7 @@ from engine import *
 
 class MainMenuScene(Scene):
 	OPTIONS_IN_WIN = False
+	FIRST_OPEN = True
 
 	def on_continue(self):
 		self.root.add(ButtonsPopup("The game does not yet exist"))
@@ -33,7 +34,7 @@ class MainMenuScene(Scene):
 		win.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=("center", "center")))
 
 	def start(self):
-		self.client.audio.loop("main_menu")
+		self.client.audio.play("main_menu")
 
 		self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1,
 			pos=(0, 0), inv_side=(True, False)))
@@ -52,6 +53,10 @@ class MainMenuScene(Scene):
 		self.menu.add(MenuItemW("OPTIONS", call=self.on_options))
 		self.menu.add(MenuItemW("ABOUT", call=self.on_about))
 		self.menu.add(MenuItemW("QUIT", call=self.raise_exit))
+
+		if MainMenuScene.FIRST_OPEN and self.client.audio.FAKE:
+			MainMenuScene.FIRST_OPEN = False
+			self.root.add(ButtonsPopup("For the music to play, you must have the 'simpleaudio' package installed. For more informations, go to options > sound."))
 
 class OptionsScene(Scene):
 	CONFIG_KEYS = [
@@ -89,18 +94,24 @@ class OptionsScene(Scene):
 		text_sound = "Enable / Disable music"
 		menu_text.add(TextW(text_sound, size=(1, 1.), padding=((0, 0), (2, 0)), text_format="scene.conf.area_title"))
 
-		music_box = menu_text.add(BoxW(size=(3, 1.), border=0))
-		check_music = music_box.add(CheckBoxW(G.CLIENT.config.get("main", "music"), pos=(1, 2)))
-		music_state = music_box.add(TextW("---", size=(1, -4), pos=(1, 10)))
+		if not self.client.audio.FAKE:
+			music_box = menu_text.add(BoxW(size=(3, 1.), border=0))
+			check_music = music_box.add(CheckBoxW(G.CLIENT.config.get("main", "music"), pos=(1, 2)))
+			music_state = music_box.add(TextW("---", size=(1, -4), pos=(1, 10)))
 
-		def on_change_music():
-			if check_music.checked:
-				music_state.set_text("Music enabled", format="scene.conf.on_state")
-			else:
-				music_state.set_text("Music disabled", format="scene.conf.off_state")
-			G.CLIENT.config.set("main", "music", check_music.checked)
-		check_music.ev_change.on(on_change_music)
-		on_change_music()
+			def on_change_music():
+				if check_music.checked:
+					music_state.set_text("Music enabled", format="scene.conf.on_state")
+				else:
+					music_state.set_text("Music disabled", format="scene.conf.off_state")
+				G.CLIENT.config.set("main", "music", check_music.checked)
+			check_music.ev_change.on(on_change_music)
+			on_change_music()
+		else:
+			bloc = menu_text.add(BoxW(size=(8, 1.), padding=((1, 1), (2, 2))))
+			text_missing = "The game needs the python package 'simpleaudio' to play background music. You can install it using pip, with\n'pip install simpleaudio'. For more informations, please visit the simpleaudio documentation."
+			bloc.add(TextW(text_missing, size=(4, 1.)))
+			bloc.add(WebLinkW("Open simpleaudio documentation", "https://simpleaudio.readthedocs.io/en/latest/installation.html#installation-ref", pos=(5, "center")))
 
 		### Skin
 
@@ -124,7 +135,7 @@ class OptionsScene(Scene):
 
 	def open_other_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
-		menu_scroll = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
+		menu_scroll = menu.add(VertScrollFromW(size=(-1, -4), pos=(1, 2), side_margin=2))
 
 		danger_area_title = menu_scroll.add(BoxW(size=(1, 1.)))
 		danger_area_title.add(SymbW("symb.danger", pos=(0, 0)))
@@ -159,10 +170,9 @@ class OptionsScene(Scene):
 			self.canvas = self.root.add(BiGWinW())
 		self.container = self.canvas.add(HorScrollLayoutW(size=1., side_margin=2))
 
-		# self.open_main_panel()
-		self.open_apperance_panel()
+		self.open_main_panel()
 
-		self.canvas.add(TextW(" [ESC] to close             [TAB] to switch           Arrows to move",
+		self.canvas.add(TextW("[ESC] to close - [TAB] to switch - Arrows to move",
 			text_format="dim_text"))
 
 	def stop(self):

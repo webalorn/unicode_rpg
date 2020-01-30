@@ -1,96 +1,101 @@
-
 from engine import *
 import engine.consts as C
 
-from multiprocessing import Process, Pipe, Event
-from collections import defaultdict
+from threading import Thread
+from queue import Queue
 import time, pathlib
 
-class SoundPlayerProcess(Process):
-	def __init__(self, start_with=None, hungry=False):
+try:
+	import simpleaudio
+except: # If the package is not installed
+	simpleaudio = False
+
+class SoundPlayer(Thread):
+	FAKE = False
+	def __init__(self):
 		super().__init__(daemon=True)
-		self.hungry = hungry
-		self.sound_q_ext, self.sound_q_recv = Pipe()
-		self.playing = Event()
+
+		self.cache = {}
+		self.cur_sound = None
+		self.last_path = None
+		self.play_q = Queue()
+
+		self.start()
+
+	def get_sound_obj(self, path):
+		if not path in self.cache:
+			self.cache[path] = simpleaudio.WaveObject.from_wave_file(path)
+		return self.cache[path]
+
+	def _in_play(self, path):
+		o = self.get_sound_obj(path)
+		self.last_path = path
+		self.cur_sound = o.play()
 
 	def run(self):
-		# Import here because otherwise it cause a crash
-		# print("I AM HERE " + str(self))
-		from engine.client.common.playsound import playsound
-
-		action, paths = "simple", None
+		paths = []
 		while True:
-			# print("LOOP " + str(self))
-			if action != "loop" or self.sound_q_recv.poll():
-				action, paths = self.sound_q_recv.recv()
+			new_paths = False
+			while not self.play_q.empty() or (self.cur_sound == None and not new_paths):
+				paths = self.play_q.get()
+				new_paths = True
 
-			if self.hungry:
-				while self.sound_q_recv.poll():
-					action, paths = self.sound_q_recv.recv()
-			# print("OK FOR", action, paths)
-			self.playing.set()
-			if action == "simple":
-				for p in paths:
-					playsound(p)
-			elif action == "loop":
-				playsound(paths[0])
-				paths = paths[1:] + [paths[0]]
-			self.playing.clear()
+			if new_paths or not self.cur_sound.is_playing():
+				if paths and paths[0] == None:
+					paths = []
+				if self.cur_sound:
+					self.cur_sound.stop()
+					self.cur_sound = None
+				if paths:
+					self._in_play(paths[0])
+					paths = paths[1:] + [paths[0]]
 
-	def send_to_proc(self, action, paths):
-		self.sound_q_ext.send((action, paths if isinstance(paths, list) else [paths]))
-
-	def queue(self, path):
-		self.send_to_proc("simple", path)
-
-	def loop(self, path):
-		self.send_to_proc("loop", path)
-
-class SoundManager:
-	"""
-		This manager ensures the sound is loaded without slowing down the UI
-	"""
-
-	def create_chan(self):
-		log("CREATE")
-		chan = SoundPlayerProcess()
-		chan.start()
-		return chan
-
-	def __init__(self):
-		self.chan = self.create_chan()
-		self.preloaded_chan = self.create_chan()
-
-	def is_sound_enabled(self):
-		return G.CLIENT.config.get("main", "music")
-
-	def queue_path(self, path, loop=False, stop=True):
-		if stop:
-			self.stop()
-		if self.is_sound_enabled():
-			log("queue", path, loop, self.chan, self.preloaded_chan)
-			if loop:
-				self.chan.loop(path)
-			else:
-				self.chan.queue(path)
-
-	def play(self, name, loop=False, stop=True):
-		path = G.CLIENT.skin.get("audio", name)
-		log(name, path)
-		if path:
-			path = pathlib.Path(C.AUDIO_PATH) / path
-			self.queue_path(str(path), loop=loop, stop=stop)
-		else:
-			log("Sound name doesn't exists", name)
-
-	def loop(self, name, stop=True):
-		self.play(name, True, stop)
+			# if self.cur_sound and self.cur_sound.is_playing():
+			# 	time.sleep(0.05)
+			time.sleep(0.01)
 
 	def stop(self):
-		log("STOP", self.chan.playing.is_set(), self.chan.is_alive())
-		if self.chan.playing.is_set():
-			self.chan.terminate()
-			self.chan.join()
-			log(self.chan, self.chan.is_alive())
-			self.chan = self.preloaded_chan
-		self.preloaded_chan = self.create_chan()
+		self.play_q.put([])
+
+	def play_path(self, paths):
+		if G.CLIENT.config.get("main", "music"):
+			self.play_q.put(paths if isinstance(paths, list) else [paths])
+
+	def name2path(self, name, force_list=False):
+		if isinstance(name, (list, tuple)):
+			return [name2path(n) for n in name]
+		path = G.CLIENT.skin.get("audio", name)
+		if path:
+			path = pathlib.Path(C.AUDIO_PATH) / path
+			return [str(path)] if force_list else str(path)
+		else:
+			log("Sound name doesn't exists", name)
+			return ""
+
+	def play(self, name):
+		self.play_path(self.name2path(name))
+
+	def play_oneshot(self, name):
+		self.play_path([self.name2path(name, force_list=True)] + [None])
+
+	def is_playing(self):
+		return self.cur_sound and self.cur_sound.is_playing()
+
+class FakeSoundPlayer:
+	FAKE = True
+
+	def stop(*args, **kwargs):
+		pass
+	def play_path(*args, **kwargs):
+		pass
+	def name2path(*args, **kwargs):
+		return ""
+	def play(*args, **kwargs):
+		pass
+	def play_oneshot(*args, **kwargs):
+		pass
+	def is_playing(*args, **kwargs):
+		return False
+
+if not simpleaudio:
+	SoundPlayer = FakeSoundPlayer

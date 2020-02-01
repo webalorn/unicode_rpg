@@ -83,8 +83,13 @@ class ColorManager:
 		cls.BACK[name] = code[1]
 
 	@classmethod
-	def convert_map(cls, grid):
+	def convert_map(cls, grid, config):
 		default = COLORS.get_default_format()
+		if not config.get("main", "colors"):
+			for row in grid:
+				row[:] = ['']*len(row)
+			grid[0][0] = "\033[{}m".format(";".join(default))
+			return
 
 		last_format = (None, None, None)
 		for i_row, row in enumerate(grid):

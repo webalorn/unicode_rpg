@@ -141,7 +141,7 @@ class WindowText(WindowManager):
 		char_map = self.screen_map.get_char_map()
 		format_map = self.screen_map.get_format_map()
 		PROFILER.next("win - 3 - process maps - 1", "win - 3 - process maps - 2")
-		COLORS.convert_map(format_map)
+		COLORS.convert_map(format_map, self.client.config)
 
 		PROFILER.next("win - 3 - process maps - 2", "win - 4 - compute grid chars")
 		char_map = [self.client.skin.list_to_char(l) for l in char_map]
@@ -156,6 +156,8 @@ class WindowText(WindowManager):
 		grid_hash = hash(printed_grid_string)
 		if self.last_writen_stdout != grid_hash:
 			self.last_writen_stdout = grid_hash
+			# log("LEN", len(printed_grid_string))
+			# log(repr(printed_grid_string))
 			with self.client.keyboard.io_lock:
 				# PROFILER.log_task_start("Write grid")
 				self.clear_screen()

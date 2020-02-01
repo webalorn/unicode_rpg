@@ -35,7 +35,11 @@ class DispelMagic:
 	_INSTANCES = []
 	def __init__(self):
 		super().__init__()
-		self._INSTANCES.append(self)
+		self._add_to_dispel_instance()
+
+	def _add_to_dispel_instance(self):
+		if not self in self._INSTANCES:
+			self._INSTANCES.append(self)
 
 	def pleaseCleanUpYourMess(self):
 		pass # I you dont do any mess, why are you here? Only to not beeing garbage collected? You fool!
@@ -52,6 +56,9 @@ class DispelMagic:
 		cls._INSTANCES.clear()
 
 	def __del__(self):
+		self.__class__.releaseAll()
+
+	def __exit__(self):
 		self.__class__.releaseAll()
 
 ########## Main functions

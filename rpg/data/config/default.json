@@ -1,6 +1,7 @@
 {
 	"main" : {
 		"skin" : "user.json",
+        "colors" : true,
 		"dev_mode" : false,
         "dev_start_scene" : false,
         "music": true

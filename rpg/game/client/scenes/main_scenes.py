@@ -79,7 +79,7 @@ class OptionsScene(Scene):
 		menu = self.new_panel(BoxW(size=(1., 50), border=((0, 1), 0)))
 		menu_keys = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
 
-		help_text = " [ENTER] to change                [{}/X] to clear ".format(KEYS_SYMB[KeyVal.BACK])
+		help_text = " [ENTER] to change              [{} / X] to clear ".format(KEYS_SYMB[KeyVal.BACK])
 		menu.add(TextW(help_text, text_format="dim_text", size=(1, 1.), pos=(0, 0)))
 
 		for key_name, key_text in self.CONFIG_KEYS:
@@ -132,6 +132,18 @@ class OptionsScene(Scene):
 				self.client.reload_skin()
 
 			skin_list.ev_changed.on(on_change_skin)
+
+		### Colors [NO, THE GAME IS UNUSABLE]
+
+		# txt = "Colors & style"
+		# menu_text.add(TextW(txt, size=(1, 1.), padding=((0, 0), (2, 0)), text_format="scene.conf.area_title"))
+
+		# text_style = "You can disable the colors and the style in the game. In a terminal emulator, it can make the game a lot quicker by drastically reducing the number of informations sent int the standard output. But the game won't look great. It will be very ugly. Really."
+		# menu_text.add(TextW(text_style, text_format="dim_text", size=(5, 1.), padding=((0, 0), (2,0))))
+
+		# colors_box = menu_text.add(BoxW(size=(3, 1.), border=0))
+		# check_colors = music_box.add(CheckBoxW(G.CLIENT.config.get("main", "colors"), pos=(1, 2)))
+		# colors_state = music_box.add(TextW("---", size=(1, -4), pos=(1, 10)))
 
 	def open_other_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))

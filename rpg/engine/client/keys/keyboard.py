@@ -53,9 +53,10 @@ class Keyboard(MagicThread):
 		for key in keys:
 			self.input_manager.add_key(key)
 
-class KeyboardTerm(Keyboard):
+class KeyboardTerm(Keyboard, DispelMagic):
 	def __init__(self, *kargs, **kwargs):
 		super().__init__(*kargs, **kwargs)
+		self._add_to_dispel_instance()
 		self.fd = sys.stdin.fileno()
 		self.oldterm = termios.tcgetattr(self.fd)
 		self.newattr = termios.tcgetattr(self.fd)
@@ -80,5 +81,5 @@ class KeyboardTerm(Keyboard):
 
 		return Key.input_to_keys_term(keys)
 
-	def __exit__():
+	def pleaseCleanUpYourMess(self):
 		termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.oldterm)

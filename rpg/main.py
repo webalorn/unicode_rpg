@@ -1,5 +1,4 @@
 from engine import *
-from game.client.client import GameClient
 import engine.consts as C
 import argparse, textwrap
 
@@ -30,6 +29,19 @@ Feel free to contact me at webalorn+urpg@gmail.com
 
 """
 
+def get_game_app(*k, **kw):
+	from game.client.client import GameClient
+	return GameClient(*k, **kw)
+
+def get_music_app(*k, **kw):
+	from apps.music import MusicClient
+	return MusicClient(*k, **kw)
+
+APPS_GETTERS = {
+	'game' : get_game_app,
+	'music' : get_music_app,
+}
+
 def get_args():
 	description = PROG_DESCRIPTION.format(C.PROG_NAME, C.VERSION)
 	description = "\n".join(textwrap.fill(l, 85) for l in description.splitlines())
@@ -43,15 +55,23 @@ def get_args():
 	parser.add_argument('--config', '-c', help=w('Name of a config file in the data/config folder, without the ".json" extension. The default value is to use the "user" configuration file.'), default="user")
 	parser.add_argument('--skin', '-s', help=w('Name of a skin in the data/skin folder, without the ".json" extension. Overwrite the skin given in the config file. The default value is defined by the configuration file, and can be changed with in-game settings.'), default=None)
 	parser.add_argument('-v', '--version', action='version', version=version, help=w("Print version and exit"))
+	parser.add_argument('-a', '--app', default='game', help=w("The application to start"), choices=list(APPS_GETTERS.keys()))
+	parser.add_argument('-e', '--scene', default='main', help=w("The scene at wich the application should start. Default is 'main'. [INTENDED FOR DEV / DEBUG ONLY]"))
+	parser.add_argument('-p', '--path', default=None, help=w("A path, can be used by some applications"))
 
 	return  parser.parse_args()
 
 def main():
-	parser = get_args()
+	args = get_args()
 	try:
-		skin = parser.skin + ".json" if parser.skin else None
-		game_client = GameClient(parser.config + ".json", force_skin=skin)
-		game_client.start()
+		log("Located at {}".format(str(C.MAIN_PATH)))
+		skin = args.skin + ".json" if args.skin else None
+		game_client = APPS_GETTERS[args.app](args.config + ".json", force_skin=skin)
+		game_client.cmd_args = args
+		game_client.start(args.scene)
+	except ErrorMessage as e:
+		print("\033[31m", "[ERROR]", e.message, "\033[0m")
+		return
 	except BaseLoadError as e:
 		print("\033[31m", "[ERROR LOADING]", e.message, "\033[0m")
 		return

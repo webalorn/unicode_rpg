@@ -1,8 +1,14 @@
+import os, pathlib
+
 # Main, and time
 PROG_NAME = "Unicode RPG"
 VERSION = "0.0.0-dev"
 LOOP_TIME = 0.2
 CURSOR_BLINK = 3
+try:
+	MAIN_PATH = pathlib.Path(__file__).parent.parent.resolve()
+except:
+	MAIN_PATH = pathlib.Path().resolve()
 
 DEF_ROWS = 10
 DEF_COLS = 20
@@ -19,15 +25,16 @@ ALLOWED_CHARS = {
 }
 
 # Storage
-DEBUG_LOG = "debug.log"
-ERR_LOG = "error.log"
-DEBUG_DM_LOG = "debug_dm.log"
-ERR_DM_LOG = "error_dm.log"
+LOG_FOLDER = MAIN_PATH / "log"
+DEBUG_LOG = LOG_FOLDER / "debug.log"
+ERR_LOG = LOG_FOLDER / "error.log"
+DEBUG_DM_LOG = LOG_FOLDER / "debug_dm.log"
+ERR_DM_LOG = LOG_FOLDER / "error_dm.log"
 
-SKINS_PATH = "data/skins"
-CONFIG_PATH = "data/config"
-IMG_PATH = "data/img"
-AUDIO_PATH = "data/audio"
+SKINS_PATH = MAIN_PATH / "data/skins"
+CONFIG_PATH = MAIN_PATH / "data/config"
+IMG_PATH = MAIN_PATH / "data/img"
+AUDIO_PATH = MAIN_PATH / "data/audio"
 
 QUICK_CHARS = { None : ' ', 0 : ' ', 1 : "block", -1 : '', 2 : "border"}
 

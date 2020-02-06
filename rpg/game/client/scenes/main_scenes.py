@@ -54,9 +54,10 @@ class MainMenuScene(Scene):
 		self.menu.add(MenuItemW("ABOUT", call=self.on_about))
 		self.menu.add(MenuItemW("QUIT", call=self.raise_exit))
 
-		if MainMenuScene.FIRST_OPEN and self.client.audio.FAKE:
+		if MainMenuScene.FIRST_OPEN:
 			MainMenuScene.FIRST_OPEN = False
-			self.root.add(ButtonsPopup("For the music to play, you must have the 'simpleaudio' package installed. For more informations, go to options > sound."))
+			if self.client.audio.FAKE:
+				self.root.add(ButtonsPopup("For the music to play, you must have the 'simpleaudio' package installed. For more informations, go to options > sound."))
 
 class OptionsScene(Scene):
 	CONFIG_KEYS = [

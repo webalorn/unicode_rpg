@@ -1,1 +1,1 @@
-{"keys": {"game": {"move_up": null, "move_down": null, "move_left": 3, "move_right": 1, "action": "E"}}, "import": ["default.json"], "main": {"dev_mode": true, "dev_start_scene": true, "skin": "default.json", "music": true}}
+{"keys": {"game": {"move_up": null, "move_down": null, "move_left": 3, "move_right": 1, "action": "E"}}, "import": ["default.json"], "main": {"dev_mode": true, "skin": "default.json", "music": true}}

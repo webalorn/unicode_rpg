@@ -1,8 +1,6 @@
 rm -R log 2>/dev/null
-cd rpg
-pypy3 main.py "$@" 2> err_main.log
-cd ..
-
 mkdir -p log
-mv rpg/*.log log
+python3 rpg/main.py "$@" 2> log/err_main.log
+
+mv rpg/log/*.log log
 cat log/*.log

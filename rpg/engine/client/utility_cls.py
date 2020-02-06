@@ -79,8 +79,11 @@ class Scene:
 		self.root = root_parent.add(SceneRootW(self))
 
 		self.ev_stop = UIEvent()
+		self.ev_draw_begin = UIEvent()
+
 		self.root.ev_key_intercept.on(self.keypress_intercept)
 		self.root.ev_key_discarded.on(self.keypress_discarded)
+		self.window.ev_draw_begin.on(self.ev_draw_begin.fire)
 		self.root.ev_key.on(self.unhandled_keypress)
 
 	def start(self):
@@ -163,12 +166,16 @@ class DungeonScene(Scene):
 		self.dm.start()
 		self.client.input_manager.clear_prio()
 		self.client.input_manager.register_prio(self)
-		self.client.window.ev_draw_begin.on(self.test_dm_state)
+		self.ev_draw_begin.on(self.test_dm_state)
 
 	def stop(self):
 		self.client.input_manager.clear_prio()
 		self.dm.close_dm_ext()
-		self.ev_draw_begin.off(self.test_dm_state)
+
+		self.root.ev_key_intercept.off(self.keypress_intercept)
+		self.root.ev_key_discarded.off(self.keypress_discarded)
+		self.window.ev_draw_begin.off(self.ev_draw_begin.fire)
+		self.root.ev_key.off(self.unhandled_keypress)
 		super().stop()
 
 	def accept_prio_key(self, key):

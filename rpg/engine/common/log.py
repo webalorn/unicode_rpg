@@ -9,7 +9,8 @@ class LogManagerFile(DispelMagic):
 		self.debug_line = "============================== " + str(date_time_start_log) + " " + tag + "\n"
 		self.writen = False
 		self.file = None
-		self.file_name = file_name
+		file_name.parent.mkdir(parents=True, exist_ok=True)
+		self.file_name = str(file_name)
 
 	def write(self, *args):
 		try:

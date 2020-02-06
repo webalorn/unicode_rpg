@@ -1,6 +1,5 @@
 import engine.consts as C
 import json, os
-from pathlib import Path
 from engine.common.exceptions import *
 from engine.common.log import *
 from collections import defaultdict
@@ -22,7 +21,7 @@ class ConfigManager:
 		self.cfg_id = hash(self.config_path)
 
 	def set_config_path(self, file_path):
-		self.config_path = Path(self.MAIN_PATH) / file_path
+		self.config_path = self.MAIN_PATH / file_path
 
 	def import_data(self, import_path):
 		return self.__class__(import_path, main_config=False).data
@@ -103,7 +102,7 @@ class ConfigManager:
 
 	@classmethod
 	def get_available_list(cls):
-		return [str(p.relative_to(cls.MAIN_PATH)) for p in Path(cls.MAIN_PATH).iterdir() if p.is_file() and p.suffix == ".json"]
+		return [str(p.relative_to(cls.MAIN_PATH)) for p in cls.MAIN_PATH.iterdir() if p.is_file() and p.suffix == ".json"]
 
 class GameConfig(ConfigManager):
 	def get_key(self, key_name):

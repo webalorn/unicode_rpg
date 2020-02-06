@@ -4,6 +4,9 @@ class Error(Exception):
 class ExitException(Exception):
 	pass
 
-class BaseLoadError(Exception):
+class ErrorMessage(Error):
 	def __init__(self, *args):
 		self.message = " ".join([str(txt) for txt in args])
+
+class BaseLoadError(ErrorMessage):
+	pass

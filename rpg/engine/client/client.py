@@ -39,6 +39,7 @@ class ClientWorker(MagicThread):
 
 class Client:
 	def __init__(self, config_file="user.json", force_skin=None):
+		self.cmd_args = {}
 		self.keyboard = None
 		self.force_skin = force_skin
 		self.load_config(config_file)
@@ -80,7 +81,7 @@ class Client:
 		self.scene = scene_cls(self, **scene_args)
 		self.scene.start()
 
-	def start_first_scene(self):
+	def start_first_scene(self, scene):
 		"""
 			Need to be overwriten with self.load_scene(scene_class)
 		"""
@@ -92,13 +93,13 @@ class Client:
 		else:
 			self.worker.EXTERN_EXIT.set()
 
-	def start(self):
+	def start(self, scene=None):
 		"""
 			This function start the main loops and wait.
 			When it returns, everything should have been cleaned
 		"""
 		try:
-			self.start_first_scene()
+			self.start_first_scene(scene)
 			self.keyboard.start()
 			self.worker.start()
 

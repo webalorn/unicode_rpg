@@ -44,6 +44,8 @@ class BaseWidget:
 		self.format_map = [[None]*self.size[1] for _ in range(self.size[0])]
 
 	def set_display_format(self, format, area=0):
+		if not self.format_map:
+			return
 		if self.parent:
 			self.displayed_format = inherit_union(self.parent.displayed_format, self.format)
 		if format != self.format:
@@ -104,6 +106,10 @@ class BaseWidget:
 			mark_dims_changed()
 			self.children = [w for w in self.children if id(w) != id(widget)]
 		return widget
+
+	def clear_children_list(self):
+		mark_dims_changed()
+		self.children = []
 
 	def delete(self):
 		if self.parent:

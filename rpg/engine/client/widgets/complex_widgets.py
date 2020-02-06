@@ -11,12 +11,13 @@ class ListItemW(MenuItemW):
 	FORMAT_FOCUSED = "select.list_item_focused"
 
 class SelectListWinW(BaseWinW):
-	def __init__(self, list_widget, *kargs, size=None, **kwargs):
+	def __init__(self, list_widget, *kargs, size=None, banner_text=None, **kwargs):
 		if size == None:
 			size = (min(G.WINDOW.size[0]-4, 30), 30)
 		super().__init__(*kargs, size=size, **kwargs)
 
-		self.add(TextW("Please select an option", align="center", v_align="center", size=(3, 1.),
+		banner_text = "Please select an option" if banner_text is None else banner_text
+		self.add(TextW(banner_text, align="center", v_align="center", size=(3, 1.),
 			format="select.list_text"))
 		self.choices = self.add(MenuVertW(scroll=True, v_align="top", size=(-3, 1.), pos=(3, 0), col_size=0))
 
@@ -83,3 +84,28 @@ class SelectListW(ButtonW):
 			return select_list
 		else:
 			return list(enumerate(select_list))
+
+class SelectListPromptW(SelectListW):
+	def __init__(self, *kargs, call=None, banner_text=None, **kwargs):
+		super().__init__(*kargs, **kwargs)
+
+		self.call = call
+		self.ev_changed.on(self.on_selected)
+		G.WINDOW.add(SelectListWinW(self, **self.win_args))
+
+	def on_selected(self):
+		if self.call:
+			self.call(self.get_selected_key())
+		self.delete()
+
+	def clear_grid(self):
+		pass
+
+	def need_draw(self):
+		pass
+
+	def set_visible_area(self, screen_map):
+		pass
+
+	def keypress(self, key):
+		return False

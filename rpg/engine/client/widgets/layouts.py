@@ -187,7 +187,7 @@ class FormLayoutW(BoxW): # TODO : move focus
 			return False
 		return True
 
-class VertScrollFromW(FormLayoutW, VertLayoutW):
+class VertScrollFormW(FormLayoutW, VertLayoutW):
 	def __init__(self, *kargs, side_margin=2, **kwargs):
 		self.side_margin = side_margin
 		self.delta_row = 0

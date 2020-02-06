@@ -164,6 +164,17 @@ class TextW(BoxW):
 				format = inherit_union(self.displayed_format, self.text_format)
 				set_area_format(self.format_map, ((r, c1), (r+1, c2)), format)
 
+class TextLineW(TextW):
+	def get_broke_text(self, larg):
+		if self.align == "right":
+			return [self.get_displayed_text_list()[-larg:]]
+		elif self.align == "center":
+			txt = self.get_displayed_text_list()
+			if len(txt) > larg:
+				txt = txt[(len(txt)-larg)//2:][:larg]
+			return [txt]
+		return [self.get_displayed_text_list()[:larg]]
+
 class SymbW(BaseWidget):
 	def __init__(self, symb, queue=[], **kwargs):
 		super().__init__(**kwargs)
@@ -219,6 +230,7 @@ class BarW(BoxW): # TODO: use skin for drawing and colors + default skin + defau
 
 class ImageW(BaseWidget):
 	SOURCE_PATH = C.IMG_PATH
+	CACHE = {}
 
 	def __init__(self, path, *kargs, back_color=None, **kwargs):
 		super().__init__(*kargs, **kwargs)
@@ -226,14 +238,17 @@ class ImageW(BaseWidget):
 		self.load(path)
 
 	def clear_grid(self):
-		pass
+		self.format_map = None
 
 	def load_image_data(self, path):
-		path = Path(self.SOURCE_PATH) / path
+		path = str(Path(self.SOURCE_PATH) / path)
+		if path in self.CACHE:
+			self.raw_img = self.CACHE[path]
 		try:
-			with open(str(path), "r") as f:
+			with open(path, "r") as f:
 				img = f.readlines()
 				self.raw_img = [[int(col) for col in row.split()] for row in img]
+				self.CACHE[path] = self.raw_img
 			return True
 		except OSError as e:
 			log("Could not open/read file {} because {}".format(path, str(e)))
@@ -259,6 +274,7 @@ class ImageW(BaseWidget):
 
 	def load(self, path):
 		if self.load_image_data(path):
+			self.keep_drawn_grid = False
 			self.img = self.make_final_image(self.raw_img)
 			nbcols = len(self.img[0]) if self.img else 0
 			self.resize((len(self.img), nbcols))

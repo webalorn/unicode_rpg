@@ -1,9 +1,26 @@
 {
+	"char": {
+		"directory" : "📁\u0000",
+		"file" : "📄\u0000"
+	},
 	"format" : {
 		"apps" : {
 			"music" : {
 				"bar" : [124, 242, []]
+			},
+			"files" : {
+				"path" : [81, 240, []],
+				"info_col" : [255, "files_col_back", []],
+				"help" : [70, 240, []],
+				"list" : [null, null, []],
+				"item" : {
+					"default" : [null, null, []],
+					"selected" : [null, 237, []]
+				}
 			}
 		}
+	},
+	"colors" : {
+		"files_col_back" : 236
 	}
 }

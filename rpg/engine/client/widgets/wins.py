@@ -58,3 +58,12 @@ class ButtonsPopup(TextPopupW):
 class ConfirmPopupW(ButtonsPopup):
 	def __init__(self, *kargs, buttons=["Cancel", "  Ok  "], call=None, always_remove=True, **kwargs):
 		super().__init__(*kargs, buttons=buttons, call=["close", call], always_remove=always_remove, **kwargs)
+
+########## Global alert window for ease of use
+
+def alert(*text_parts, sep=" ", call=None):
+	text = sep.join(text_parts)
+	if G.WINDOW:
+		G.WINDOW.add(ButtonsPopup(text, call=[call], always_remove=True))
+	else:
+		log("No window, trying to log : {}".format(text))

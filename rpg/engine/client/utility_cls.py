@@ -101,6 +101,11 @@ class Scene:
 		self.try_stop_subscenes(self.root)
 		self.root.delete()
 
+		self.root.ev_key_intercept.off(self.keypress_intercept)
+		self.root.ev_key_discarded.off(self.keypress_discarded)
+		self.window.ev_draw_begin.off(self.ev_draw_begin.fire)
+		self.root.ev_key.off(self.unhandled_keypress)
+
 	def try_stop_subscenes(self, node):
 		for child in node.children:
 			if isinstance(child, SceneRootW) and node.scene:
@@ -171,11 +176,6 @@ class DungeonScene(Scene):
 	def stop(self):
 		self.client.input_manager.clear_prio()
 		self.dm.close_dm_ext()
-
-		self.root.ev_key_intercept.off(self.keypress_intercept)
-		self.root.ev_key_discarded.off(self.keypress_discarded)
-		self.window.ev_draw_begin.off(self.ev_draw_begin.fire)
-		self.root.ev_key.off(self.unhandled_keypress)
 		super().stop()
 
 	def accept_prio_key(self, key):

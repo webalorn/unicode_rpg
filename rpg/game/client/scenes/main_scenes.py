@@ -78,7 +78,7 @@ class OptionsScene(Scene):
 
 	def open_keys_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 50), border=((0, 1), 0)))
-		menu_keys = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
+		menu_keys = menu.add(VertScrollFormW(size=(-1, 1.), pos=(1, 0), side_margin=2))
 
 		help_text = " [ENTER] to change              [{} / X] to clear ".format(KEYS_SYMB[KeyVal.BACK])
 		menu.add(TextW(help_text, text_format="dim_text", size=(1, 1.), pos=(0, 0)))
@@ -88,7 +88,7 @@ class OptionsScene(Scene):
 
 	def open_apperance_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
-		menu_text = menu.add(VertScrollFromW(size=(-1, 1.), pos=(1, 0), side_margin=2))
+		menu_text = menu.add(VertScrollFormW(size=(-1, 1.), pos=(1, 0), side_margin=2))
 
 		### Music
 
@@ -148,7 +148,7 @@ class OptionsScene(Scene):
 
 	def open_other_panel(self):
 		menu = self.new_panel(BoxW(size=(1., 70), border=((0, 1), 0)))
-		menu_scroll = menu.add(VertScrollFromW(size=(-1, -4), pos=(1, 2), side_margin=2))
+		menu_scroll = menu.add(VertScrollFormW(size=(-1, -4), pos=(1, 2), side_margin=2))
 
 		danger_area_title = menu_scroll.add(BoxW(size=(1, 1.)))
 		danger_area_title.add(SymbW("symb.danger", pos=(0, 0)))

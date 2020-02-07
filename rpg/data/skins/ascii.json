@@ -1,5 +1,8 @@
 {
-	"import" : ["imports/default_gui.json"],
+	"import" : ["default.json"],
+	"main": {
+		"mode" : "ascii"
+	},
 	"char": {
 		"block" : "#",
 		"half" : "#",
@@ -8,6 +11,9 @@
 		"select_left" : ">",
 		"select_right" : "<",
 		"select_block" : "#",
+
+		"directory" : "##",
+		"file" : "->",
 
 		"border" : {
 			"simple" : "#",
@@ -46,11 +52,11 @@
 	},
 	"charset" : {
 		"password" : "*",
-		"bar": " $#",
-		"bar_fading": " $#",
+		"bar": " |#",
+		"bar_fading": " |#",
 		"border": "|-++++",
 		"button": "|-++++",
-		"button_focused": "!=####",
+		"button_focused": "I=oooo",
 		"checkbox" : "[] v",
 		"radio" : "<> x",
 		"game" : {

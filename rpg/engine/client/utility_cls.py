@@ -119,7 +119,7 @@ class Scene:
 
 	def ask_exit(self):
 		text_exit = "Do you really want to exit {}?".format(C.PROG_NAME)
-		w = self.root.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=self.raise_exit))
+		w = G.WINDOW.add(ConfirmPopupW(text_exit, buttons=["Cancel", " Exit "], call=self.raise_exit))
 		w.buttons[-1].FORMAT_FOCUSED = "button_danger_focused"
 
 	def keypress_intercept(self, key):

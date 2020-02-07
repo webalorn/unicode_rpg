@@ -32,3 +32,4 @@ class SkinManager(ConfigManager):
 	def data_loaded_action(self):
 		for name, code in self.data['colors'].items():
 			COLORS.add(name, code)
+		self.ascii = (self.data["main"]["mode"] == "ascii")

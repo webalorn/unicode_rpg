@@ -3,5 +3,8 @@
 		"imports/default_gui.json",
 		"imports/default_audio.json",
 		"imports/apps.json"
-	]
+	],
+	"main": {
+		"mode" : "unicode"
+	}
 }

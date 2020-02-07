@@ -125,7 +125,7 @@ class OptionsScene(Scene):
 
 			b = menu_text.add(BoxW(size=(5, 1.)))
 			skin_list = b.add(SelectListW(self.get_skin_list(), pos=(0, 2),
-				start_id=self.client.config.get("main", "skin")))
+				start_id=self.client.config.get("main", "skin"), win_args={"banner_text": "Select a skin"}))
 
 			def on_change_skin():
 				new_skin = skin_list.get_selected_key()

@@ -263,13 +263,23 @@ class ImageW(BaseWidget):
 		grid = [[to_skin_char("half")]*self.size[1] for _ in range(self.size[0])]
 		format_map = [[None]*self.size[1] for _ in range(self.size[0])]
 		back_color = 'back' if self.back_color in [None, 'back'] else self.back_color
-		for i_row, row in enumerate(img):
-			for i_col, (back, front) in enumerate(row):
-				if back == -1:
-					back = back_color
-				if front == -1:
-					front = back_color
-				set_point_format(format_map, (i_row, i_col), (front, back, []))
+		if G.CLIENT.skin.ascii:
+			for i_row, row in enumerate(img):
+				for i_col, (back, front) in enumerate(row):
+					color = back_color
+					if back != -1:
+						color = back
+					elif front != -1:
+						color = front
+					set_point_format(format_map, (i_row, i_col), (color, color, []))
+		else:
+			for i_row, row in enumerate(img):
+				for i_col, (back, front) in enumerate(row):
+					if back == -1:
+						back = back_color
+					if front == -1:
+						front = back_color
+					set_point_format(format_map, (i_row, i_col), (front, back, []))
 		return (grid, format_map)
 
 	def load(self, path):

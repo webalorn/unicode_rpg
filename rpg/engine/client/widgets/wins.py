@@ -21,6 +21,9 @@ class BaseWinW(BoxW):
 			self.close()
 		return super().keypress(key)
 
+	def fire_key(self, key):
+		return bool(super().fire_key(key))
+
 class BiGWinW(BaseWinW):
 	def __init__(self, *kargs, free_space=1, **kwargs):
 		kwargs["pos"] = (free_space, free_space*2)

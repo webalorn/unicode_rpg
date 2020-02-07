@@ -1,0 +1,7 @@
+{
+	"import": ["default.json"],
+	"char": {
+		"directory" : "██",
+		"file" : " →"
+	}
+}

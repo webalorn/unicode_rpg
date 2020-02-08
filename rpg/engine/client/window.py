@@ -164,6 +164,7 @@ class WindowText(WindowManager):
 				self.screen_cleared = False
 
 				sys.stdout.write(printed_grid_string)
+				sys.stdout.write("\r")
 				sys.stdout.flush()
 				# PROFILER.log_task_end("Write grid")
 		

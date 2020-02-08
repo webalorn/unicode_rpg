@@ -83,6 +83,7 @@ class TextW(BoxW):
 			self.last_real_text = None
 			self.text = list(text) # To allow append / pop
 			self.keep_drawn_grid = False
+			return True
 
 	def get_displayed_text_list(self):
 		return self.text
@@ -117,7 +118,9 @@ class TextW(BoxW):
 								w = real_txt.append(real_txt[-1][larg:])
 								real_txt[-2] = real_txt[-2][:larg]
 						else:
-							real_txt.append(list(word))
+							while word:
+								real_txt.append(list(word[:larg]))
+								word = word[larg:]
 					else:
 						for c in word:
 							if not real_txt or len(real_txt[-1]) >= larg:

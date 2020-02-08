@@ -1,6 +1,7 @@
 from .simple import *
 from engine.client.keys import *
 from engine import *
+import copy
 
 ########## Text & buttons
 
@@ -8,8 +9,13 @@ class TextareaW(TextW):
 	FOCUSABLE = True
 
 	def __init__(self, *kargs, limit=None, strip_lines=False, **kwargs):
+		self.cursor_pos = 0
 		super().__init__(*kargs, strip_lines=strip_lines, **kwargs)
 		self.limit = limit
+
+	def set_text(self, *args, **kwargs):
+		if super().set_text(*args, **kwargs):
+			self.cursor_pos = len(self.text)
 
 	def draw_widget(self):
 		self.anchor_down = self.focused
@@ -18,43 +24,112 @@ class TextareaW(TextW):
 	def is_char_allowed(self, key):
 		return key.is_char_allowed()
 
+	def get_cur_pos(self):
+		self.cursor_pos = min(max(self.cursor_pos, 0), len(self.text))
+		return self.cursor_pos
+
 	def keypress(self, key):
 		if not self.focused:
 			return False
 		if self.is_char_allowed(key):
-			self.text.append(key.key)
 			if self.limit:
 				l = self.limit
 				if l == "auto":
 					r, c = self.get_inner_size()
 					l = r*c
-				while len(self.text) > l:
-					self.text.pop()
+				if len(self.text) >= l:
+					return True
+				# while len(self.text) > l:
+				# 	self.text.pop()
+			# self.text.append(key.key)
+			c = self.get_cur_pos()
+			self.text = self.text[:c] + [key.key] + self.text[c:]
+			self.cursor_pos += 1
 		elif key.check(KeyVal.BACK):
-			if self.text:
-				self.text.pop()
+			c = self.get_cur_pos()
+			if c:
+				self.text.pop(c-1)
+				self.cursor_pos -= 1
+		elif key.check(KeyVal.ARROW_RIGHT):
+			self.cursor_pos += 1
+			self.get_cur_pos()
+		elif key.check(KeyVal.ARROW_LEFT):
+			self.cursor_pos -= 1
+			self.get_cur_pos()
+		elif key.check(KeyVal.ARROW_UP):
+			size = self.get_inner_size()
+			self.cursor_pos -= size[1]
+			self.get_cur_pos()
+		elif key.check(KeyVal.ARROW_DOWN):
+			size = self.get_inner_size()
+			self.cursor_pos += size[1]
+			self.get_cur_pos()
+		reset_steps('cursor')
 		return True
 
 	def get_broke_text(self, larg):
 		txt = super().get_broke_text(larg)
 		if self.focused:
-			cursor = to_skin_char("cursor") if get_cycle_val(C.CURSOR_BLINK) else " "
-			if txt and len(txt[-1]) < self.get_inner_size()[1]:
-				txt = txt[:-1] + [txt[-1] + [cursor]]
-			else:
-				txt = txt + [cursor]
+			txt = copy.deepcopy(txt)
+			cur_p = self.get_cur_pos()
+			i = 0
+			self._grid_cur = None
+			for i_line, l in enumerate(txt):
+				for i_col, c in enumerate(l):
+					while i < len(self.text) and self.text[i] != c:
+						i += 1
+					if i >= cur_p:
+						self._grid_cur = (i_line, i_col)
+						break
+					i += 1
+				if self._grid_cur:
+					break
+			if not self._grid_cur:
+				if not txt:
+					txt = [[" "]]
+				elif len(txt[-1]) >= larg:
+					txt.append([" "])
+				else:
+					txt[-1].append(" ")
+				self._grid_cur = (len(txt)-1, len(txt[-1])-1)
+			if not get_cycle_val(C.CURSOR_BLINK, name='cursor'):
+				txt[self._grid_cur[0]][self._grid_cur[1]] = to_skin_char("cursor")
+
+			haut = self.get_inner_size()[0]
+			cur_l = self._grid_cur[0]
+			if len(txt) - cur_l > haut:
+				txt = txt[:haut+cur_l-len(txt)]
 		return txt
+
+	# def get_broke_text(self, larg):
+	# 	txt = super().get_broke_text(larg)
+	# 	if self.focused:
+	# 		cursor = to_skin_char("cursor") if get_cycle_val(C.CURSOR_BLINK) else " "
+	# 		if txt and len(txt[-1]) < self.get_inner_size()[1]:
+	# 			txt = txt[:-1] + [txt[-1] + [cursor]]
+	# 		else:
+	# 			txt = txt + [cursor]
+	# 	return txt
 
 class TextInputW(TextareaW):
 	def get_displayed_text_list(self):
-		cursor = to_skin_char("cursor")
-		if get_cycle_val(C.CURSOR_BLINK) and self.focused:
-			return self.text + [cursor]
-		return self.text + [" "] if self.focused else self.text # Space to replace cursor
+		if not self.focused:
+			return self.text
+		else:
+			txt = self.text + [" "]
+			if not get_cycle_val(C.CURSOR_BLINK, name='cursor'):
+				txt[self.get_cur_pos()] = to_skin_char("cursor")
+			return txt
 
 	def get_broke_text(self, larg):
 		if self.focused:
-			return [self.get_displayed_text_list()[-larg:]]
+			l = self.get_displayed_text_list()
+			c = self.get_cur_pos()
+			if c == 0:
+				return [l[:larg]]
+			elif len(l)-c > larg-1:
+				l = l[:larg+c-1-len(l)]
+			return [l[-larg:]]
 		return [self.get_displayed_text_list()[:larg]]
 
 	def is_char_allowed(self, key):
@@ -67,7 +142,7 @@ class PasswordW(TextInputW):
 		txt = [pass_chars[i%n] for i in range(len(self.text))]
 
 		cursor = to_skin_char("cursor")
-		if get_cycle_val(C.CURSOR_BLINK) and self.focused:
+		if not get_cycle_val(C.CURSOR_BLINK, name='cursor') and self.focused:
 			return txt + [cursor]
 		return txt + [" "] if self.focused else txt # Space to replace cursor
 

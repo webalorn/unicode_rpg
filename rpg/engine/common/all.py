@@ -14,8 +14,16 @@ class G: # G : contain general variables (objet to allow variable to be modified
 	WINDOW = None
 	CLIENT_STEPS = 0
 
-def get_cycle_val(cycle_time, modul=2):
-	return (G.CLIENT_STEPS // cycle_time) % modul
+	_STEP_DECALS = {'cursor' : 0}
+
+def get_cycle_val(cycle_time, modul=2, name=None):
+	steps = G.CLIENT_STEPS
+	if name:
+		steps += G._STEP_DECALS[name]
+	return (steps // cycle_time) % modul
+
+def reset_steps(name):
+	G._STEP_DECALS[name] = -G.CLIENT_STEPS
 
 # I allowed these functions to bypass encapsulation for speed efficiency
 def to_skin_char(code):

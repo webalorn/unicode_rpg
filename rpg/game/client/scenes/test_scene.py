@@ -43,12 +43,20 @@ class TestScene(Scene):
 		def call_button():
 			self.root.add(TextPopupW("Close me, please :'("))
 
+		self.root.add(TextareaW(
+			"Veniam magna incididunt esse exercitation aliquip sint eu pariatur elit cupidatat. Veniam magna incididunt esse exercitation aliquip sint eu pariatur elit cupidatat. Veniam magna incididunt esse exercitation aliquip sint eu pariatur elit cupidatat.",
+			size=(5, 20), border=1, pos=("center", "center"), inv_side=(False, True)
+		))
+
+		# self.root.add(TextInputW("abc de 123 456 789 10", size=(3, 18), border=1, limit=0, pos=("center", "center")))
+
+
 		self.root.add(ButtonW("Button", size=12, big=True, call=call_button))
 
-		l = ["value1", "value2", "value2", "Obi-Wan Kenobi"]
-		self.root.add(SelectListW(l, pos=(10, 3)))
+		# l = ["value1", "value2", "value2", "Obi-Wan Kenobi"]
+		# self.root.add(SelectListW(l, pos=(10, 3)))
 
-		self.root.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=(5, 3)))
+		# self.root.add(WebLinkW("Github page", "https://github.com/webalorn/unicode_rpg", pos=(5, 3)))
 
 		# self.root.add(AnimationW("flame_anim_51_28.cbi", tile_size=(51, 28), framerate=1, pos="center"))
 
